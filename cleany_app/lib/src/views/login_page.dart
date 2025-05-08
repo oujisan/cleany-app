@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
       title: 'Login UI',
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: const LoginScreen(),
+      home: LoginScreen(),
     );
   }
 }

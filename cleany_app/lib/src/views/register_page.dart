@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
       title: 'Register UI',
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: const RegisterScreen(),
+      home: RegisterScreen(),
     );
   }
 }
