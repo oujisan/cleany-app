@@ -1,3 +1,5 @@
+import 'package:cleany_app/src/views/login_page.dart';
+import 'package:cleany_app/src/views/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
@@ -15,13 +17,10 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      title: "Cleany",
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+      home: RegisterScreen(),
     );
   }
 }
