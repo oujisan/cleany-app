@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
+import 'src/views/splash_page.dart';
 
 void main() => runApp(
   DevicePreview(
@@ -17,11 +18,8 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
+      title: 'Cleany App',
+      home: SplashPage(),
+        );
   }
 }
