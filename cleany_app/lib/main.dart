@@ -6,7 +6,7 @@ import 'src/views/splash_page.dart';
 void main() => runApp(
   DevicePreview(
     enabled: !kReleaseMode,
-    builder: (context) => MainApp(), // Wrap your app
+    builder: (context) => MainApp(),
   ),
 );
 
