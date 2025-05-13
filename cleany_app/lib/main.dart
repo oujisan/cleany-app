@@ -20,7 +20,7 @@ class MainApp extends StatelessWidget {
       title: "Cleany",
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: RegisterScreen(),
+      home: LoginScreen(),
     );
   }
 }

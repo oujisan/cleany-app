@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
 
-void main() => runApp(
-  DevicePreview(
-    enabled: !kReleaseMode,
-    builder: (context) => MainApp(), // Wrap your app
-  ),
-);
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Register UI',
-      debugShowCheckedModeBanner: false,
-      showPerformanceOverlay: false,
-      home: const RegisterScreen(),
-    );
-  }
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
-class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({super.key});
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  void _register() {
+    print("Register Klik");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,48 +24,111 @@ class RegisterScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
-
-              // Username Field
-              const Text("Username", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Email Field
-              const Text("Email", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Password Field
-              const Text("Password", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
+              // Logo dan Judul
+              Row(
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.teal,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'C',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 60,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    "Cleany App",
+                    style: TextStyle(
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
 
-              // Register Button
+              // First Name
+              const Text(
+                "First Name",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: firstNameController,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+
+              // Last Name
+              const Text(
+                "Last Name",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: lastNameController,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+
+              // Username
+              const Text(
+                "Username",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+
+              // Email
+              const Text(
+                "Email",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+
+              // Password
+              const Text(
+                "Password",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 32),
+
+              // Register button
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                     shape: RoundedRectangleBorder(
@@ -88,17 +144,16 @@ class RegisterScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
 
-              // Login Text
+              // Navigasi Login
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text("Have an account? "),
                   GestureDetector(
                     onTap: () {
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+                      Navigator.pop(context); // kembali ke Login
                     },
                     child: const Text(
                       "Login",
