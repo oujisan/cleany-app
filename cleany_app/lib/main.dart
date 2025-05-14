@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'src/views/splash_page.dart';
+import 'src/views/login_page.dart';
+import 'src/views/register_page.dart';
 
 void main() => runApp(
   DevicePreview(
@@ -15,11 +17,16 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
       title: 'Cleany App',
-      home: SplashPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => SplashPage(),
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+      },
         );
   }
 }

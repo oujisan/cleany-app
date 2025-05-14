@@ -1,121 +1,91 @@
+import 'package:cleany_app/src/views/register_page.dart';
 import 'package:flutter/material.dart';
-import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
-
-void main() => runApp(
-  DevicePreview(
-    enabled: !kReleaseMode,
-    builder: (context) => MainApp(), // Wrap your app
-  ),
-);
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Login UI',
-      debugShowCheckedModeBanner: false,
-      showPerformanceOverlay: false,
-      home: LoginScreen(),
-    );
-  }
-}
+import 'package:cleany_app/core/colors.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return const Scaffold(
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-
-              // Email
-              const Text(
-                "Email",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const TextField(
-                decoration: InputDecoration(border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 16),
-
-              // Password
-              const Text(
-                "Password",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const TextField(
-                obscureText: true,
-                decoration: InputDecoration(border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 32),
-
-              // Login button
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    "Login",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Text Register
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      "Register",
-                      style: TextStyle(
-                        color: Colors.teal,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Center(
-                child: Text(
-                  "Forget Password?",
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-            ],
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+          child: LoginForm(),
         ),
       ),
+    );
+  }
+}
+
+class LoginForm extends StatelessWidget {
+  const LoginForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Image.asset(
+          'assets/images/Logo with text.png',
+          width: 310,
+          height: 70,
+        ),
+        const SizedBox(height: 20),
+
+        const Text("Email", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(decoration: InputDecoration(border: OutlineInputBorder())),
+        const SizedBox(height: 16),
+
+        const Text("Password", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(
+          obscureText: true,
+          decoration: InputDecoration(border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 32),
+
+        SizedBox(
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            child: const Text(
+              "Login",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Don't have an account? "),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                );
+              },
+              child: const Text(
+                "Register",
+                style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Center(
+          child: Text("Forget Password?", style: TextStyle(color: Colors.black)),
+        ),
+      ],
     );
   }
 }
