@@ -35,6 +35,19 @@ class RegisterForm extends StatelessWidget {
         const SizedBox(height: 20),
         const SizedBox(height: 20),
 
+        const Text("Firstname", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(
+          decoration: InputDecoration(border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 16),
+
+        const Text("Lastname", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(
+          decoration: InputDecoration(border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 16),
      
         const Text("Username", style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
