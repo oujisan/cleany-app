@@ -4,7 +4,18 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+
   State<LoginScreen> createState() => _LoginScreenState();
+
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'Login UI',
+      debugShowCheckedModeBanner: false,
+      showPerformanceOverlay: false,
+      home: LoginScreen(),
+    );
+  }
+
 }
 
 class _LoginScreenState extends State<LoginScreen> {

@@ -4,7 +4,18 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
+
   State<RegisterScreen> createState() => _RegisterScreenState();
+
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'Register UI',
+      debugShowCheckedModeBanner: false,
+      showPerformanceOverlay: false,
+      home: RegisterScreen(),
+    );
+  }
+
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
