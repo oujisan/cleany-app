@@ -1,4 +1,6 @@
+import 'package:cleany_app/src/views/register_page.dart';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +19,9 @@ class LoginScreen extends StatefulWidget {
   }
 
 }
+=======
+import 'package:cleany_app/core/colors.dart';
+>>>>>>> e61693302546d93a354dd1df193fa31afb3af149
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
@@ -28,10 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return const Scaffold(
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
+<<<<<<< HEAD
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -154,8 +160,83 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
+=======
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+          child: LoginForm(),
+>>>>>>> e61693302546d93a354dd1df193fa31afb3af149
         ),
       ),
+    );
+  }
+}
+
+class LoginForm extends StatelessWidget {
+  const LoginForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Image.asset(
+          'assets/images/Logo with text.png',
+          width: 310,
+          height: 70,
+        ),
+        const SizedBox(height: 20),
+
+        const Text("Email", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(decoration: InputDecoration(border: OutlineInputBorder())),
+        const SizedBox(height: 16),
+
+        const Text("Password", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const TextField(
+          obscureText: true,
+          decoration: InputDecoration(border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 32),
+
+        SizedBox(
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            child: const Text(
+              "Login",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Don't have an account? "),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                );
+              },
+              child: const Text(
+                "Register",
+                style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Center(
+          child: Text("Forget Password?", style: TextStyle(color: Colors.black)),
+        ),
+      ],
     );
   }
 }
