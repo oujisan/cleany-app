@@ -18,11 +18,6 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< HEAD
-      builder: DevicePreview.appBuilder,
-      home: RegisterScreen(),
-    );
-=======
       showPerformanceOverlay: false,
       title: 'Cleany App',
       initialRoute: '/',
@@ -32,6 +27,5 @@ class MainApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
       },
         );
->>>>>>> e61693302546d93a354dd1df193fa31afb3af149
   }
 }
