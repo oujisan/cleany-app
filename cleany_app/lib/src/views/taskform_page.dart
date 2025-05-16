@@ -1,4 +1,3 @@
-import 'package:cleany_app/core/colors.dart';
 import 'package:cleany_app/core/font.dart';
 import 'package:flutter/material.dart';
 
