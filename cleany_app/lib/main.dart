@@ -1,6 +1,7 @@
 import 'package:cleany_app/src/views/home_page.dart';
 import 'package:cleany_app/src/views/profile_page.dart';
 import 'package:cleany_app/src/views/register_page.dart';
+import 'package:cleany_app/src/views/taskform_page.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
@@ -27,6 +28,7 @@ class MainApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/profile': (context) => ProfilePage(),
         '/home': (context) => HomeScreen(),
+        '/add': (context) => const CleaningTaskFormScreen(),
       },
         );
   }
