@@ -1,3 +1,4 @@
+import 'package:cleany_app/src/views/home_page.dart';
 import 'package:cleany_app/src/views/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cleany_app/core/colors.dart';
@@ -13,9 +14,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void _login() {
-    print("Login Klik");
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +37,9 @@ class LoginForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SizedBox(height: 118),
         Image.asset('assets/images/Logo with text.png', width: 310, height: 70),
-        const SizedBox(height: 20),
+        const SizedBox(height: 54),
 
         const Text("Email", style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
@@ -86,13 +85,13 @@ class LoginForm extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
                 );
               },
               child: const Text(
                 "Register",
                 style: TextStyle(
-                  color: Colors.teal,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

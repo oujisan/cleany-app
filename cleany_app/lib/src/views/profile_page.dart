@@ -1,3 +1,4 @@
+import 'package:cleany_app/src/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -7,22 +8,27 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF00796B),
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.white,
-        currentIndex: 4, // Icon Profile aktif
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.cleaning_services),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
+      bottomNavigationBar: CustomNavbar(
+        selectedIndex: 4,
+        onItemTapped: (int index) {
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/cleaning');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/add');
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/history');
+              break;
+            case 4:
+              Navigator.pushNamed(context, '/profile');
+              break;
+          }
+        },
       ),
       body: SafeArea(
         child: Padding(
