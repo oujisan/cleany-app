@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/colors.dart';
-import 'welcome_page.dart'; // Ganti jika welcome ada di tempat lain
+import 'login_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -29,11 +29,25 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 4), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => WelcomePage()), // Pastikan nama sesuai
-      );
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) => const LoginScreen(),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+        );
+      }
     });
   }
 
