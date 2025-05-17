@@ -10,6 +10,7 @@ import 'package:cleany_app/src/views/splash_page.dart';
 import 'package:cleany_app/src/views/login_page.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:cleany_app/src/providers/auth_provider.dart';
+import 'package:cleany_app/src/providers/task_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

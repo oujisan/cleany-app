@@ -14,7 +14,6 @@ class AuthService {
       json,
       (data) => LoginResponseModel.fromJson(data),
     );
-
     if (!apiResponse.success) {
       final errorMessage = apiResponse.error ?? apiResponse.message;
       throw Exception(errorMessage);

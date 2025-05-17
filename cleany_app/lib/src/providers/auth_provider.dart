@@ -28,8 +28,9 @@ class AuthProvider extends ChangeNotifier {
       final result = await _authService.login(email, password);
       _loginResponse = result;
       _username = result.username;
+      _role = result.role;
+      _userId = int.parse(result.userId);
 
-      // Simpan data penting ke secure storage
       await _storage.write(key: 'token', value: result.token);
       await _storage.write(key: 'user_role', value: result.role);
       await _storage.write(key: 'user_id', value: result.userId.toString());
@@ -47,6 +48,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     _loginResponse = null;
     _username = null;
+    _role = null;
+    _userId = null;
     await _storage.deleteAll();
     notifyListeners();
   }
@@ -70,8 +73,6 @@ class AuthProvider extends ChangeNotifier {
       _username = storedUsername;
       _userId = int.parse(storedUserId);
       _role = storedUserRole;
-
-      notifyListeners();
     }
   }
 }
