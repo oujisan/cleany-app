@@ -1,22 +1,22 @@
-import 'package:cleany_app/src/views/home_page.dart';
-import 'package:cleany_app/src/views/profile_page.dart';
-import 'package:cleany_app/src/views/register_page.dart';
-import 'package:cleany_app/src/views/taskform_page.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:cleany_app/src/views/splash_page.dart';
-import 'package:cleany_app/src/views/login_page.dart';
 import 'package:cleany_app/core/colors.dart';
-import 'package:cleany_app/src/providers/auth_provider.dart';
-import 'package:cleany_app/src/providers/task_provider.dart';
+
+import 'src/views/splash_screen.dart';
+import 'src/views/auth/login_screen.dart';
+import 'src/views/auth/register_screen.dart';
+import 'src/views/auth/forgot_password/forgot_password_step1_screen.dart';
+import 'src/views/auth/forgot_password/forgot_password_step2_screen.dart';
+import 'src/views/auth/forgot_password/forgot_password_step3_screen.dart';
+
+import 'package:cleany_app/src/providers/login_provider.dart';
+import 'package:cleany_app/src/providers/register_provider.dart';
+import 'package:cleany_app/src/providers/forgot_password_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final authProvider = AuthProvider();
-  await authProvider.loadUserFromStorage();
 
   runApp(
     DevicePreview(
@@ -26,7 +26,6 @@ void main() async {
   );
 }
 
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -34,8 +33,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => LoginProvider()), // Proviuder
+        ChangeNotifierProvider(create: (_) => RegisterProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()), // Proviuder
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -43,16 +43,17 @@ class MainApp extends StatelessWidget {
         title: 'Cleany App',
         initialRoute: '/',
         routes: {
-          '/': (context) => SplashPage(),
+          '/': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
           '/register': (context) => RegisterScreen(),
-          '/profile': (context) => ProfilePage(),
-          '/home': (context) => HomeScreen(),
-          '/add': (context) => const CleaningTaskFormScreen(),
+          '/forgot-password': (context) => ForgotPasswordStep1Screen(),
+          '/forgot-password-step2': (context) => ForgotPasswordStep2Screen(),
+          '/forgot-password-step3': (context) => ForgotPasswordStep3Screen(),
         },
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.secondary),
+          fontFamily: 'Poppins',
         ),
         builder: DevicePreview.appBuilder, // tetap pakai device preview
       ),
