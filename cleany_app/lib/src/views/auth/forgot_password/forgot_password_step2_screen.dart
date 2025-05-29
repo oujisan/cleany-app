@@ -115,8 +115,7 @@ class ForgotPasswordStep2Screen extends StatelessWidget {
                     onTap: () {
                       if (forgotPasswdProvider.isVerificationCodeValid) {
                         Navigator.pushNamed(context, '/forgot-password-step3');
-                      }
-                      else {
+                      } else {
                         null;
                       }
                     },
@@ -132,7 +131,7 @@ class ForgotPasswordStep2Screen extends StatelessWidget {
                       ),
                       child: const Center(
                         child: Text(
-                          'Next',
+                          'Verification',
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: 16,
@@ -140,6 +139,50 @@ class ForgotPasswordStep2Screen extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
+
+                  Container(
+                    child: Column(
+                      children: [
+                       Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Didn\'t get the code? Tap to',
+                          style: TextStyle(color: AppColors.grey, fontSize: 14),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () {
+                            if (!forgotPasswdProvider.isCooldown) {
+                              forgotPasswdProvider.setCooldown();
+                              forgotPasswdProvider.startTimer();
+                            } else {
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Please wait for ${forgotPasswdProvider.durationInString} seconds to resend again'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            'resend',
+                            style: TextStyle(
+                              color:  AppColors.primary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (forgotPasswdProvider.isCooldown)
+                      Text(
+                        'Resend code in ${forgotPasswdProvider.durationInString} seconds',
+                        style: const TextStyle(color: AppColors.grey, fontSize: 14),
+                    )
+                    ])
                   ),
                 ],
               );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class ForgotPasswordProvider extends ChangeNotifier {
   String _email = '';
@@ -11,6 +12,9 @@ class ForgotPasswordProvider extends ChangeNotifier {
   bool _isConfirmNewPasswdTouched = false;
   bool _isNewPasswdVisible = false;
   bool _isConfirmNewPasswdVisible = false;
+  bool _isCooldown = false;
+  int _duration = 60;
+  Timer? _timer;
 
   String get email => _email;
   String get verifcode => _verifcode;
@@ -22,6 +26,9 @@ class ForgotPasswordProvider extends ChangeNotifier {
   bool get isConfirmNewPasswdTouched => _isConfirmNewPasswdTouched;
   bool get isNewPasswdVisible => _isNewPasswdVisible;
   bool get isConfirmNewPasswdVisible => _isConfirmNewPasswdVisible;
+  bool get isCooldown => _isCooldown;
+  int get duration => _duration;
+  String get durationInString => _duration.toString();
 
   void setEmail(String email) {
     _email = email;
@@ -71,6 +78,24 @@ class ForgotPasswordProvider extends ChangeNotifier {
   void toggleConfirmNewPasswdVisibility() {
     _isConfirmNewPasswdVisible = !_isConfirmNewPasswdVisible;
     notifyListeners();
+  }
+
+  void setCooldown() {
+    _isCooldown = true;
+    notifyListeners();
+  }
+
+  void startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_duration > 0) {
+        _duration--;
+        notifyListeners();
+      } else {
+        _isCooldown = false;
+        _timer?.cancel();
+        notifyListeners();
+      }
+    });
   }
 
   bool get isPasswordMatch {

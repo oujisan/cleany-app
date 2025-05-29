@@ -179,7 +179,7 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
                       ),
                       child: const Center(
                         child: Text(
-                          'Next',
+                          'Reset Password',
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: 16,

@@ -99,10 +99,10 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
                                 ? forgotPasswdProvider.email.isEmpty
                                     ? 'Email is required'
                                     : forgotPasswdProvider.email.trim().isEmpty
-                                      ? 'Email cannot be whitespace only'
-                                      : !forgotPasswdProvider.isEmailValid
-                                        ? 'Invalid email format'
-                                        : null
+                                    ? 'Email cannot be whitespace only'
+                                    : !forgotPasswdProvider.isEmailValid
+                                    ? 'Invalid email format'
+                                    : null
                                 : null,
                       ),
                     ),
@@ -112,7 +112,10 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
 
                   GestureDetector(
                     onTap: () {
-                      if (forgotPasswdProvider.isEmailValid) {
+                      if (forgotPasswdProvider.isEmailValid &&
+                          !forgotPasswdProvider.isCooldown) {
+                        forgotPasswdProvider.setCooldown();
+                        forgotPasswdProvider.startTimer();
                         Navigator.pushNamed(context, '/forgot-password-step2');
                       } else {
                         null;
@@ -123,14 +126,15 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
                       height: 50,
                       decoration: BoxDecoration(
                         color:
-                            forgotPasswdProvider.isEmailValid
+                            forgotPasswdProvider.isEmailValid &&
+                                    !forgotPasswdProvider.isCooldown
                                 ? AppColors.primary
                                 : AppColors.grey,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Center(
                         child: Text(
-                          'Next',
+                          'Send Code',
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: 16,
@@ -139,6 +143,17 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  SizedBox(height: 16),
+
+                  if (forgotPasswdProvider.isCooldown)
+                    Text(
+                      'Resend code in ${forgotPasswdProvider.durationInString} seconds',
+                      style: const TextStyle(
+                        color: AppColors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
                 ],
               );
             },
