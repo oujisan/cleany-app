@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:cleany_app/src/providers/forgot_password_provider.dart';
+import 'package:cleany_app/src/providers/auth_provider.dart';
 
-class ForgotPasswordStep3Screen extends StatelessWidget{
+class ForgotPasswordStep3Screen extends StatelessWidget {
   const ForgotPasswordStep3Screen({super.key});
+
+  Future<void> _handleResetPassword(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    final isSuccess = await authProvider.resetPassword();
+
+    if (isSuccess) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Reset Password Successfully! Redirecting to login..."),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${authProvider.message}! ${authProvider.error}"),
+        ),
+      );
+    }
+    authProvider.toggleResetPasswordButton();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +110,8 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Consumer<ForgotPasswordProvider>(
-            builder: (context, forgotPasswdProvider, child) {
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
               return Column(
                 children: [
                   SizedBox(height: 28),
@@ -88,32 +119,32 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
                   Focus(
                     onFocusChange: (hasFocus) {
                       if (!hasFocus) {
-                        forgotPasswdProvider.setNewPasswdTouched();
+                        authProvider.setPasswordTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: forgotPasswdProvider.setNewPasswd,
-                      obscureText: !forgotPasswdProvider.isNewPasswdVisible,
+                      onChanged: authProvider.setPassword,
+                      obscureText: !authProvider.isPasswordVisible,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'New Password',
                         errorText:
-                            forgotPasswdProvider.isNewPasswdTouched
-                                ? forgotPasswdProvider.newPasswd.isEmpty
+                            authProvider.isPasswordTouched
+                                ? authProvider.password.isEmpty
                                     ? "Password cannot be empty"
-                                    : forgotPasswdProvider.newPasswd.trim().isEmpty
+                                    : authProvider.password.trim().isEmpty
                                     ? "Password cannot be whitespace only"
-                                    : !forgotPasswdProvider.isPasswordValid
+                                    : !authProvider.isPasswordValid
                                     ? "At least 8 characters and contains one number"
                                     : null
                                 : null,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            forgotPasswdProvider.isNewPasswdVisible
+                            authProvider.isPasswordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                           ),
-                          onPressed: forgotPasswdProvider.toggleNewPasswdVisibility,
+                          onPressed: authProvider.togglePasswordVisibility,
                           color: AppColors.grey,
                         ),
                       ),
@@ -125,31 +156,31 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        forgotPasswdProvider.setConfirmNewPasswdTouched();
+                        authProvider.setConfirmPasswordTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: forgotPasswdProvider.setConfirmNewPasswd,
-                      obscureText: !forgotPasswdProvider.isConfirmNewPasswdVisible,
+                      onChanged: authProvider.setConfirmPassword,
+                      obscureText: !authProvider.isConfirmPasswordVisible,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Confirm New Password',
                         errorText:
-                            forgotPasswdProvider.isConfirmNewPasswdTouched
-                                ? forgotPasswdProvider.confirmNewPasswd.isEmpty
+                            authProvider.isConfirmPasswordTouched
+                                ? authProvider.confirmPassword.isEmpty
                                     ? "Confirm password cannot be empty"
-                                    : !forgotPasswdProvider.isPasswordMatch
+                                    : !authProvider.isPasswordMatch
                                     ? "Password doesn't match"
                                     : null
                                 : null,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            forgotPasswdProvider.isConfirmNewPasswdVisible
+                            authProvider.isConfirmPasswordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                           ),
                           onPressed:
-                              forgotPasswdProvider.toggleConfirmNewPasswdVisibility,
+                              authProvider.toggleConfirmPasswordVisibility,
                           color: AppColors.grey,
                         ),
                       ),
@@ -160,10 +191,13 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
 
                   GestureDetector(
                     onTap: () {
-                      if (forgotPasswdProvider.isPasswordMatch && forgotPasswdProvider.isPasswordValid) {
-                        Navigator.pushReplacementNamed(context, '/login');
-                      }
-                      else {
+                      if (authProvider.isPasswordMatch &&
+                          authProvider.isPasswordValid &&
+                          !authProvider.isLoading &&
+                          authProvider.resetPasswordButton) {
+                        authProvider.toggleResetPasswordButton();
+                        _handleResetPassword(context, authProvider);
+                      } else {
                         null;
                       }
                     },
@@ -172,19 +206,25 @@ class ForgotPasswordStep3Screen extends StatelessWidget{
                       height: 50,
                       decoration: BoxDecoration(
                         color:
-                            forgotPasswdProvider.isPasswordMatch && forgotPasswdProvider.isPasswordValid
+                            authProvider.isPasswordMatch &&
+                                    authProvider.isPasswordValid &&
+                                    !authProvider.isLoading &&
+                                    authProvider.resetPasswordButton
                                 ? AppColors.primary
                                 : AppColors.grey,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Reset Password',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 16,
-                          ),
-                        ),
+                      child: Center(
+                        child:
+                            authProvider.isLoading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                  'Reset Password',
+                                  style: TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
                       ),
                     ),
                   ),

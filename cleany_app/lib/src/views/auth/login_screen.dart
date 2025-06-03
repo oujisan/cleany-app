@@ -1,12 +1,35 @@
 import 'package:cleany_app/core/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:cleany_app/src/providers/login_provider.dart';
+import 'package:cleany_app/src/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-  @override
 
+  Future<void> _handleLogin(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    final isSuccess = await authProvider.login();
+    if (!context.mounted) return;
+    if (isSuccess) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            "${authProvider.message}! ${authProvider.error}"
+            )
+          )
+        );
+    }
+    authProvider.toggleLoginButton();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -52,8 +75,8 @@ class LoginScreen extends StatelessWidget {
         child: Expanded(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Consumer<LoginProvider>(
-              builder: (context, loginProvider, child) {
+            child: Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
                 return Column(
                   children: [
                     const SizedBox(height: 8),
@@ -62,22 +85,22 @@ class LoginScreen extends StatelessWidget {
                     Focus(
                       onFocusChange: (hasFocus) {
                         if (!hasFocus) {
-                          loginProvider.setEmailTouched();
+                          authProvider.setEmailTouched();
                         }
                       },
                       child: TextField(
-                        onChanged: loginProvider.setEmail,
+                        onChanged: authProvider.setEmail,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: 'Email',
                           errorText:
-                              loginProvider.isEmailTouched
-                                  ? loginProvider.email.isEmpty
+                              authProvider.isEmailTouched
+                                  ? authProvider.email.isEmpty
                                       ? "Email cannot be empty"
-                                      : loginProvider.email.trim().isEmpty
+                                      : authProvider.email.trim().isEmpty
                                       ? "Email cannot be whitespace only"
-                                      : !loginProvider.isEmailValid
+                                      : !authProvider.isEmailValid
                                       ? "Invalid Email"
                                       : null
                                   : null,
@@ -91,30 +114,30 @@ class LoginScreen extends StatelessWidget {
                     Focus(
                       onFocusChange: (hasFocus) {
                         if (!hasFocus) {
-                          loginProvider.setPasswordTouched();
+                          authProvider.setPasswordTouched();
                         }
                       },
                       child: TextField(
-                        onChanged: loginProvider.setPassword,
-                        obscureText: !loginProvider.isPasswordVisible,
+                        onChanged: authProvider.setPassword,
+                        obscureText: !authProvider.isPasswordVisible,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: 'Password',
                           errorText:
-                              loginProvider.isPasswordTouched
-                                  ? loginProvider.password.isEmpty
+                              authProvider.isPasswordTouched
+                                  ? authProvider.password.isEmpty
                                       ? "Password cannot be empty"
-                                      : loginProvider.password.trim().isEmpty
+                                      : authProvider.password.trim().isEmpty
                                       ? "Password cannot be whitespace only"
                                       : null
                                   : null,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              loginProvider.isPasswordVisible
+                              authProvider.isPasswordVisible
                                   ? Icons.visibility
                                   : Icons.visibility_off,
                             ),
-                            onPressed: loginProvider.togglePasswordVisibility,
+                            onPressed: authProvider.togglePasswordVisibility,
                             color: AppColors.grey,
                           ),
                         ),
@@ -150,19 +173,11 @@ class LoginScreen extends StatelessWidget {
                     // Login Button
                     GestureDetector(
                       onTap: () {
-                        if (loginProvider.isEmailValid &&
-                            loginProvider.password.trim().isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Login successful!'),
-                                action: SnackBarAction(
-                                  label: 'OK',
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                  }
-                                ),
-                              ),
-                            );
+                        if (authProvider.isEmailValid && authProvider.password.trim().isNotEmpty) {
+                          authProvider.isLoading
+                              ? null
+                              : authProvider.toggleLoginButton(); 
+                              _handleLogin(context, authProvider);
                         } else {
                           null;
                         }
@@ -172,56 +187,57 @@ class LoginScreen extends StatelessWidget {
                         height: 50,
                         decoration: BoxDecoration(
                           color:
-                              loginProvider.isEmailValid &&
-                                      loginProvider.password.trim().isNotEmpty
+                              authProvider.isEmailValid &&
+                                      authProvider.password.trim().isNotEmpty &&
+                                      !authProvider.isLoading
                                   ? AppColors.primary
                                   : AppColors.grey,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Center(
-                          child: Text(
-                            'Login',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 16,
-                            ),
-                          ),
+                        child: Center(
+                          child:
+                              authProvider.isLoading
+                                  ? const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.white,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      color: AppColors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                         ),
                       ),
                     ),
 
                     // Register button + text
-                    Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Don\'t have an account?',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Don\'t have an account?',
+                          style: TextStyle(color: AppColors.grey, fontSize: 14),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/register',
+                            );
+                          },
+                          child: const Text(
+                            'Register',
                             style: TextStyle(
-                              color: AppColors.grey,
+                              color: AppColors.primary,
                               fontSize: 14,
                             ),
                           ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                            ),
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                '/register',
-                              );
-                            },
-                            child: const Text(
-                              'Register',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 );

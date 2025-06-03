@@ -1,0 +1,169 @@
+import 'package:cleany_app/core/secure_storage.dart';
+import 'package:cleany_app/core/constant.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:cleany_app/src/models/register_model.dart';
+
+class AuthService {
+  String _message = '';
+  String _error = '';
+  Future<bool> login(String email, String password) async {
+    final url = Uri.parse(AppConstants.apiLoginUrl);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'password': password}),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final data = apiResponse['data'];
+        final token = data['token'];
+        final user = data['user'];
+        final userId = user['user_id'];
+        final username = user['username'];
+        final role = user['role'];
+
+        await SecureStorage.write(AppConstants.keyToken, token);
+        await SecureStorage.write(AppConstants.keyId, userId.toString());
+        await SecureStorage.write(AppConstants.keyUsername, username);
+        await SecureStorage.write(AppConstants.keyRole, role);
+
+        return true;
+      } else {
+        _message = apiResponse['message'];
+        _error = apiResponse['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> register(RegisterModel registerData) async {
+    final url = Uri.parse(AppConstants.apiRegisterUrl);
+    try{
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(registerData.toJson()),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        _message = apiResponse['message'];
+        return true;
+      } else {
+        _message = apiResponse['message'];
+        _error = apiResponse['error'];
+        return false;
+      }
+      
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    final url = Uri.parse(AppConstants.apiForgotPasswordUrl);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        _message = apiResponse['message'];
+        return true;
+      } else {
+        _message = apiResponse['message'];
+        _error = apiResponse['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> verifyCode(String email, String code) async {
+    final url = Uri.parse(AppConstants.apiVerifyPasswordUrl);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'code': code}),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        _message = apiResponse['message'];  
+        return true;
+      } else {
+        _message = apiResponse['message'];
+        _error = apiResponse['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(String email, String password) async {
+    final url = Uri.parse(AppConstants.apiResetPasswordUrl);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'newPassword': password}),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        _message = apiResponse['message'];
+        return true;
+      } else {
+        _message = apiResponse['message'];
+        _error = apiResponse['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<String> getToken() async {
+    final token = await SecureStorage.read(AppConstants.keyToken);
+    return token ?? '';
+  }
+
+  Future<bool> isLoggedIn() async {
+    final token = await SecureStorage.read(AppConstants.keyToken);
+    return token != null && token.isNotEmpty;
+  }
+
+  Future<bool> logout() async {
+    await SecureStorage.clear();
+    return true;
+  }
+
+  String get getMessage => _message;
+  String get getError => _error;
+}

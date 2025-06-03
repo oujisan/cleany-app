@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:cleany_app/src/providers/register_provider.dart';
+import 'package:cleany_app/src/providers/auth_provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
+
+  Future<void> _handleRegister(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    final isSuccess = await authProvider.register();
+    if (!context.mounted) return;
+    if (isSuccess) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Registration successful!"),
+        ),
+      );
+      await Future.delayed(
+        const Duration(seconds: 2),
+      );
+      if (!context.mounted) return;
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${authProvider.message}! ${authProvider.error}"),
+        ),
+      );
+    }
+    authProvider.toggleRegisterButton();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,8 +69,8 @@ class RegisterScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24),
-          child: Consumer<RegisterProvider>(
-            builder: (context, registerProvider, child) {
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
               return Column(
                 children: [
                   SizedBox(height: 8),
@@ -48,19 +78,19 @@ class RegisterScreen extends StatelessWidget {
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        registerProvider.setFirstNameTouched();
+                        authProvider.setFirstNameTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: registerProvider.setFirstName,
+                      onChanged: authProvider.setFirstName,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'First Name',
                         errorText:
-                            registerProvider.isFirstNameTouched
-                                ? registerProvider.firstName.isEmpty
+                            authProvider.isFirstNameTouched
+                                ? authProvider.firstName.isEmpty
                                     ? 'First name is required'
-                                    : registerProvider.firstName.trim().isEmpty
+                                    : authProvider.firstName.trim().isEmpty
                                     ? 'First name cannot whitespace'
                                     : null
                                 : null,
@@ -71,7 +101,7 @@ class RegisterScreen extends StatelessWidget {
                   SizedBox(height: 32),
 
                   TextField(
-                    onChanged: registerProvider.setLastName,
+                    onChanged: authProvider.setLastName,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Last Name',
@@ -83,23 +113,23 @@ class RegisterScreen extends StatelessWidget {
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        registerProvider.setUsernameTouched();
+                        authProvider.setUsernameTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: registerProvider.setUsername,
+                      onChanged: authProvider.setUsername,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Username',
                         errorText:
-                            registerProvider.isUsernameTouched
-                                ? registerProvider.username.isEmpty
+                            authProvider.isUsernameTouched
+                                ? authProvider.username.isEmpty
                                     ? 'Username is required'
-                                    : registerProvider.username.trim().isEmpty
+                                    : authProvider.username.trim().isEmpty
                                     ? 'Username cannot whitespace'
-                                    : registerProvider.username.length < 3
+                                    : authProvider.username.length < 3
                                     ? 'Username must be at least 3 characters'
-                                    : !registerProvider.isUsernameValid
+                                    : !authProvider.isUsernameValid
                                     ? 'contain only letters, numbers, and underscores'
                                     : null
                                 : null,
@@ -112,21 +142,21 @@ class RegisterScreen extends StatelessWidget {
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        registerProvider.setEmailTouched();
+                        authProvider.setEmailTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: registerProvider.setEmail,
+                      onChanged: authProvider.setEmail,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Email',
                         errorText:
-                            registerProvider.isEmailTouched
-                                ? registerProvider.email.isEmpty
+                            authProvider.isEmailTouched
+                                ? authProvider.email.isEmpty
                                     ? 'Email is required'
-                                    : registerProvider.email.trim().isEmpty
+                                    : authProvider.email.trim().isEmpty
                                     ? 'Email cannot whitespace'
-                                    : !registerProvider.isEmailValid
+                                    : !authProvider.isEmailValid
                                     ? 'Invalid email format'
                                     : null
                                 : null,
@@ -139,32 +169,32 @@ class RegisterScreen extends StatelessWidget {
                   Focus(
                     onFocusChange: (hasFocus) {
                       if (!hasFocus) {
-                        registerProvider.setPasswordTouched();
+                        authProvider.setPasswordTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: registerProvider.setPassword,
-                      obscureText: !registerProvider.isPasswordVisible,
+                      onChanged: authProvider.setPassword,
+                      obscureText: !authProvider.isPasswordVisible,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Password',
                         errorText:
-                            registerProvider.isPasswordTouched
-                                ? registerProvider.password.isEmpty
+                            authProvider.isPasswordTouched
+                                ? authProvider.password.isEmpty
                                     ? "Password cannot be empty"
-                                    : registerProvider.password.trim().isEmpty
+                                    : authProvider.password.trim().isEmpty
                                     ? "Password cannot be whitespace only"
-                                    : !registerProvider.isPasswordValid
+                                    : !authProvider.isPasswordValid
                                     ? "At least 8 characters and contains one number"
                                     : null
                                 : null,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            registerProvider.isPasswordVisible
+                            authProvider.isPasswordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                           ),
-                          onPressed: registerProvider.togglePasswordVisibility,
+                          onPressed: authProvider.togglePasswordVisibility,
                           color: AppColors.grey,
                         ),
                       ),
@@ -176,31 +206,31 @@ class RegisterScreen extends StatelessWidget {
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        registerProvider.setConfirmPasswordTouched();
+                        authProvider.setConfirmPasswordTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: registerProvider.setConfirmPassword,
-                      obscureText: !registerProvider.isConfirmPasswordVisible,
+                      onChanged: authProvider.setConfirmPassword,
+                      obscureText: !authProvider.isConfirmPasswordVisible,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Confirm Password',
                         errorText:
-                            registerProvider.isConfirmPasswordTouched
-                                ? registerProvider.confirmPassword.isEmpty
+                            authProvider.isConfirmPasswordTouched
+                                ? authProvider.confirmPassword.isEmpty
                                     ? "Confirm password cannot be empty"
-                                    : !registerProvider.isPasswordMatch
+                                    : !authProvider.isPasswordMatch
                                     ? "Password doesn't match"
                                     : null
                                 : null,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            registerProvider.isConfirmPasswordVisible
+                            authProvider.isConfirmPasswordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                           ),
                           onPressed:
-                              registerProvider.toggleConfirmPasswordVisibility,
+                              authProvider.toggleConfirmPasswordVisibility,
                           color: AppColors.grey,
                         ),
                       ),
@@ -211,18 +241,18 @@ class RegisterScreen extends StatelessWidget {
 
                   GestureDetector(
                     onTap: () {
-                      if (registerProvider.isFormValid) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Registration Successfull"),
-                            action: SnackBarAction(label: "OK", onPressed: () {
-                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            },),
-                            duration: Duration(seconds: 1),
-                          )
-                        );
+                      if (authProvider.isRegistrationFormValid) {
+                        authProvider.isLoading
+                            ? null
+                            : authProvider.toggleRegisterButton();
+                            _handleRegister(context, authProvider);
                       } else {
-                        null;
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Registration form is not valid!"),
+                          ),
+                        );
                       }
                     },
                     child: Container(
@@ -230,48 +260,52 @@ class RegisterScreen extends StatelessWidget {
                       height: 50,
                       decoration: BoxDecoration(
                         color:
-                            registerProvider.isFormValid
+                            authProvider.isRegistrationFormValid
                                 ? AppColors.primary
                                 : AppColors.grey,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Register',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 16,
+                      child: Center(
+                        child: authProvider.isLoading
+                            ? CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.white,
+                              ),
+                            )
+                            : Text(
+                              'Register',
+                              style: TextStyle(
+                              color: AppColors.white,
+                              fontSize: 16,
                           ),
                         ),
                       ),
                     ),
                   ),
 
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Have an account?',
-                          style: TextStyle(color: AppColors.grey, fontSize: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Have an account?',
+                        style: TextStyle(color: AppColors.grey, fontSize: 14),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.only(right: 16),
                         ),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.only(right: 16),
-                          ),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          },
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 14,
-                            ),
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 14,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               );

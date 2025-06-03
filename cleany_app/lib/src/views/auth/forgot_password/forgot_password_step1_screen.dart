@@ -1,10 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:cleany_app/src/providers/forgot_password_provider.dart';
+import 'package:cleany_app/src/providers/auth_provider.dart';
 
 class ForgotPasswordStep1Screen extends StatelessWidget {
   const ForgotPasswordStep1Screen({super.key});
+
+  Future<void> _handleSendVerificationCode(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    final isSuccess = await authProvider.forgotPassword();
+
+    if (isSuccess) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Verification code has been sent to your email. Please check your inbox.",
+          ),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      authProvider.setCooldown();
+      authProvider.startTimer();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      Navigator.pushNamed(context, '/forgot-password-step2');
+    } else {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${authProvider.message}! ${authProvider.error}"),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    authProvider.toggleSendCodeButton();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,8 +114,8 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Consumer<ForgotPasswordProvider>(
-            builder: (context, forgotPasswdProvider, child) {
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
               return Column(
                 children: [
                   SizedBox(height: 28),
@@ -86,21 +123,21 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
                   Focus(
                     onFocusChange: (onFocus) {
                       if (!onFocus) {
-                        forgotPasswdProvider.setEmailTouched();
+                        authProvider.setEmailTouched();
                       }
                     },
                     child: TextField(
-                      onChanged: forgotPasswdProvider.setEmail,
+                      onChanged: authProvider.setEmail,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Email',
                         errorText:
-                            forgotPasswdProvider.isEmailTouched
-                                ? forgotPasswdProvider.email.isEmpty
+                            authProvider.isEmailTouched
+                                ? authProvider.email.isEmpty
                                     ? 'Email is required'
-                                    : forgotPasswdProvider.email.trim().isEmpty
+                                    : authProvider.email.trim().isEmpty
                                     ? 'Email cannot be whitespace only'
-                                    : !forgotPasswdProvider.isEmailValid
+                                    : !authProvider.isEmailValid
                                     ? 'Invalid email format'
                                     : null
                                 : null,
@@ -112,11 +149,17 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
 
                   GestureDetector(
                     onTap: () {
-                      if (forgotPasswdProvider.isEmailValid &&
-                          !forgotPasswdProvider.isCooldown) {
-                        forgotPasswdProvider.setCooldown();
-                        forgotPasswdProvider.startTimer();
-                        Navigator.pushNamed(context, '/forgot-password-step2');
+                      if (authProvider.isEmailValid &&
+                          !authProvider.isCooldown &&
+                          authProvider.sendCodeButton) {
+                        authProvider.isLoading
+                            ? null
+                            : authProvider.toggleSendCodeButton();
+                            _handleSendVerificationCode(
+                              context,
+                              authProvider,
+                            );
+
                       } else {
                         null;
                       }
@@ -126,29 +169,36 @@ class ForgotPasswordStep1Screen extends StatelessWidget {
                       height: 50,
                       decoration: BoxDecoration(
                         color:
-                            forgotPasswdProvider.isEmailValid &&
-                                    !forgotPasswdProvider.isCooldown
+                            authProvider.isEmailValid &&
+                            !authProvider.isCooldown &&
+                            !authProvider.isLoading &&
+                            authProvider.sendCodeButton
                                 ? AppColors.primary
                                 : AppColors.grey,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Send Code',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 16,
-                          ),
-                        ),
+                      child: Center(
+                        child:
+                            authProvider.isLoading
+                                ? CircularProgressIndicator(
+                                  color: AppColors.white,
+                                )
+                                : Text(
+                                  'Send Code',
+                                  style: TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
                       ),
                     ),
                   ),
 
                   SizedBox(height: 16),
 
-                  if (forgotPasswdProvider.isCooldown)
+                  if (authProvider.isCooldown)
                     Text(
-                      'Resend code in ${forgotPasswdProvider.durationInString} seconds',
+                      'Resend code in ${authProvider.durationInString} seconds',
                       style: const TextStyle(
                         color: AppColors.grey,
                         fontSize: 14,

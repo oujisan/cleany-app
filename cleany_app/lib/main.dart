@@ -3,6 +3,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:cleany_app/core/colors.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'src/views/splash_screen.dart';
 import 'src/views/auth/login_screen.dart';
@@ -11,12 +12,11 @@ import 'src/views/auth/forgot_password/forgot_password_step1_screen.dart';
 import 'src/views/auth/forgot_password/forgot_password_step2_screen.dart';
 import 'src/views/auth/forgot_password/forgot_password_step3_screen.dart';
 
-import 'package:cleany_app/src/providers/login_provider.dart';
-import 'package:cleany_app/src/providers/register_provider.dart';
-import 'package:cleany_app/src/providers/forgot_password_provider.dart';
+import 'package:cleany_app/src/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   runApp(
     DevicePreview(
@@ -33,9 +33,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginProvider()), // Proviuder
-        ChangeNotifierProvider(create: (_) => RegisterProvider()),
-        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()), // Proviuder
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
