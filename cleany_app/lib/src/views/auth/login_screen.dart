@@ -11,20 +11,18 @@ class LoginScreen extends StatelessWidget {
     AuthProvider authProvider,
   ) async {
     final isSuccess = await authProvider.login();
+    // final isSuccess = 1 == 1;
+
     if (!context.mounted) return;
     if (isSuccess) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "${authProvider.message}! ${authProvider.error}"
-            )
-          )
-        );
+          content: Text("${authProvider.message}! ${authProvider.error}"),
+        ),
+      );
     }
     authProvider.toggleLoginButton();
   }
@@ -173,11 +171,12 @@ class LoginScreen extends StatelessWidget {
                     // Login Button
                     GestureDetector(
                       onTap: () {
-                        if (authProvider.isEmailValid && authProvider.password.trim().isNotEmpty) {
+                        if (authProvider.isEmailValid &&
+                            authProvider.password.trim().isNotEmpty) {
                           authProvider.isLoading
                               ? null
-                              : authProvider.toggleLoginButton(); 
-                              _handleLogin(context, authProvider);
+                              : authProvider.toggleLoginButton();
+                          _handleLogin(context, authProvider);
                         } else {
                           null;
                         }

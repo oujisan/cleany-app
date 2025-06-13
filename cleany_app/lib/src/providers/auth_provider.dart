@@ -282,4 +282,13 @@ class AuthProvider extends ChangeNotifier {
 
     return isSuccess;
   }
+
+  Future<bool> isLoggedIn() async {
+    return await _authService.isLoggedIn();
+  }
+
+  Future<bool> logout() async {
+    return await _authService.logout();
+  }
+  
 }

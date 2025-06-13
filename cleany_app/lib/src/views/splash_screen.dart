@@ -1,3 +1,5 @@
+import 'package:cleany_app/src/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cleany_app/core/colors.dart';
 
@@ -31,9 +33,26 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.pushNamed(context, '/login');
+        final AuthProvider authProvider = Provider.of<AuthProvider>(context, listen: false);
+        _handlerCheckToken(context, authProvider);
       }
     });
+  }
+
+  Future<void> _handlerCheckToken(
+    BuildContext context, 
+    AuthProvider authProvider
+  ) async {
+    final isLoggedIn = await authProvider.isLoggedIn();
+
+    if (!context.mounted) return;
+
+    if (isLoggedIn) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+    else {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override

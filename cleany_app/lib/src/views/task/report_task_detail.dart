@@ -1,0 +1,892 @@
+import 'package:cleany_app/core/colors.dart';
+import 'package:cleany_app/src/providers/task_detail_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:cleany_app/core/constant.dart';
+import 'package:cleany_app/core/secure_storage.dart';
+
+class ReportTaskDetailScreen extends StatefulWidget {
+  const ReportTaskDetailScreen({super.key});
+
+  @override
+  State<ReportTaskDetailScreen> createState() => _ReportTaskDetailScreenState();
+}
+
+class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
+  late String _roleUser = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initialize();
+    });
+  }
+
+  Future<void> _initialize() async {
+    final provider = Provider.of<TaskDetailProvider>(context, listen: false);
+    provider.loadTaskDetails();
+    provider.fetchVerificationTask();
+
+    final role = await SecureStorage.read(AppConstants.keyRole);
+    setState(() {
+      _roleUser = role ?? '';
+    });
+  }
+
+  void _showImagePreview(String imageUrl) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog.fullscreen(
+        backgroundColor: AppColors.black,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppColors.black,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image_rounded,
+                            size: 80,
+                            color: AppColors.white,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Gagal memuat gambar',
+                            style: TextStyle(
+                              color: AppColors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              top: 50,
+              right: 16,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color chipColor;
+    String statusText;
+    IconData statusIcon;
+    
+    switch (status.toLowerCase()) {
+      case 'pending':
+        chipColor = AppColors.secondary;
+        statusText = 'Menunggu';
+        statusIcon = Icons.schedule_rounded;
+        break;
+      case 'in_progress':
+        chipColor = Colors.orange;
+        statusText = 'Dikerjakan';
+        statusIcon = Icons.work_outline_rounded;
+        break;
+      case 'completed':
+        chipColor = AppColors.primary;
+        statusText = 'Selesai';
+        statusIcon = Icons.check_circle_rounded;
+        break;
+      case 'approved':
+        chipColor = Colors.green;
+        statusText = 'Disetujui';
+        statusIcon = Icons.verified_rounded;
+        break;
+      case 'rejected':
+        chipColor = AppColors.error;
+        statusText = 'Ditolak';
+        statusIcon = Icons.cancel_rounded;
+        break;
+      default:
+        chipColor = AppColors.grey;
+        statusText = status;
+        statusIcon = Icons.help_outline_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: chipColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: chipColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusIcon,
+            size: 14,
+            color: chipColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            statusText,
+            style: TextStyle(
+              color: chipColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    Color? iconColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.grey.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: iconColor ?? AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.grey.withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageGrid({
+    required String title,
+    required List<String> imageUrls,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (imageUrls.isNotEmpty) ...[
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: imageUrls.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _showImagePreview(imageUrls[index]),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.grey.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            imageUrls[index],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.grey.withOpacity(0.1),
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.broken_image_rounded,
+                                      size: 32,
+                                      color: AppColors.grey,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Gagal memuat',
+                                      style: TextStyle(
+                                        color: AppColors.grey,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          // Overlay with zoom icon
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topRight,
+                                end: Alignment.center,
+                                colors: [
+                                  AppColors.black.withOpacity(0.3),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: AppColors.black.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.zoom_in_rounded,
+                                color: AppColors.white,
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ] else ...[
+            Container(
+              height: 120,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.grey.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.grey.withOpacity(0.2),
+                  width: 1,
+                  style: BorderStyle.solid,
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.image_not_supported_rounded,
+                    size: 40,
+                    color: AppColors.grey,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Tidak ada foto',
+                    style: TextStyle(
+                      color: AppColors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String text,
+    required VoidCallback onPressed,
+    required Color color,
+    bool isOutlined = false,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: isOutlined
+          ? OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: color, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            )
+          : ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: AppColors.white,
+                elevation: 2,
+                shadowColor: color.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Detail Laporan',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          Consumer<TaskDetailProvider>(
+            builder: (context, provider, _) {
+              if (provider.task?.status == 'pending') {
+                return Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Fitur edit akan segera tersedia'),
+                            backgroundColor: AppColors.primary,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit_rounded),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: const Text(
+                              'Hapus Laporan',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            content: const Text(
+                              'Apakah Anda yakin ingin menghapus laporan ini?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(
+                                  'Batal',
+                                  style: TextStyle(color: AppColors.grey),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text('Fitur hapus akan segera tersedia'),
+                                      backgroundColor: AppColors.error,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Hapus',
+                                  style: TextStyle(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.delete_rounded),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+      body: Consumer<TaskDetailProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 2,
+              ),
+            );
+          }
+
+          if (provider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final asn = provider.task;
+          final verif = provider.verification;
+          
+          if (asn == null) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inbox_rounded,
+                    size: 48,
+                    color: AppColors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Data tidak tersedia',
+                    style: TextStyle(
+                      color: AppColors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                    border: Border.all(
+                      color: AppColors.grey.withOpacity(0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              asn.task.title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.black,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          _buildStatusChip(asn.status),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.grey.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.grey.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          asn.task.description ?? 'Tidak ada deskripsi',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.black.withOpacity(0.8),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Task Details
+                _buildDetailCard(
+                  icon: Icons.location_on_rounded,
+                  label: 'Lokasi',
+                  value: '${asn.task.area.name} - ${asn.task.area.building} - Lt. ${asn.task.area.floor}',
+                ),
+                
+                _buildDetailCard(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Dibuat pada',
+                  value: DateFormat('EEEE, dd MMMM yyyy HH:mm', 'id_ID').format(
+                    DateFormat('dd-MM-yyyy HH:mm:ss').parse(asn.createdAt),
+                  ),
+                  iconColor: AppColors.secondary,
+                ),
+                
+                _buildDetailCard(
+                  icon: Icons.person_rounded,
+                  label: 'Dibuat oleh',
+                  value: asn.task.createdBy,
+                  iconColor: AppColors.primary,
+                ),
+                
+                if (asn.workedBy != null)
+                  _buildDetailCard(
+                    icon: Icons.engineering_rounded,
+                    label: 'Dikerjakan oleh',
+                    value: asn.workedBy!,
+                    iconColor: Colors.orange,
+                  ),
+                
+                if (asn.assignmentAt != null)
+                  _buildDetailCard(
+                    icon: Icons.work_history_rounded,
+                    label: 'Ditugaskan pada',
+                    value: asn.assignmentAt!,
+                    iconColor: AppColors.secondary,
+                  ),
+                
+                if (asn.completeAt != null)
+                  _buildDetailCard(
+                    icon: Icons.check_circle_rounded,
+                    label: 'Diselesaikan pada',
+                    value: asn.completeAt!,
+                    iconColor: Colors.green,
+                  ),
+
+                const SizedBox(height: 12),
+
+                // Task Images
+                _buildImageGrid(
+                  title: 'Foto Laporan',
+                  imageUrls: asn.task.taskImageUrl ?? [],
+                ),
+
+                // Proof Images
+                if (asn.status == 'completed' && 
+                    asn.proofImageUrl != null && 
+                    asn.proofImageUrl!.isNotEmpty)
+                  _buildImageGrid(
+                    title: 'Foto Bukti Pengerjaan',
+                    imageUrls: asn.proofImageUrl!,
+                  ),
+
+                // Action Button for Cleaner
+                if (_roleUser == 'cleaner' && asn.status != 'approved' && asn.status != 'rejected')
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    child: _buildActionButton(
+                      text: asn.status == 'pending'
+                          ? 'Mulai Pengerjaan'
+                          : asn.status == 'in_progress'
+                          ? 'Selesai Pengerjaan'
+                          : 'Laporan Selesai',
+                      onPressed: () {
+                        String newStatus;
+                        if (asn.status == 'pending') {
+                          newStatus = 'in_progress';
+                        } else if (asn.status == 'in_progress') {
+                          newStatus = 'completed';
+                        } else {
+                          newStatus = 'pending';
+                        }
+                        provider.updateTaskStatus(newStatus);
+                      },
+                      color: asn.status == 'pending'
+                          ? AppColors.primary
+                          : asn.status == 'in_progress'
+                          ? Colors.green
+                          : AppColors.grey,
+                    ),
+                  ),
+
+                // Verification Section
+                if ((_roleUser == 'koordinator' || _roleUser == 'cleaner') && 
+                    asn.status == 'completed')
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.verified_user_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Verifikasi Tugas',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        if (verif != null) ...[
+                          _buildDetailCard(
+                            icon: Icons.person_outline_rounded,
+                            label: 'Diverifikasi oleh',
+                            value: verif.username ?? '-',
+                            iconColor: AppColors.primary,
+                          ),
+                          _buildDetailCard(
+                            icon: Icons.check_circle_outline_rounded,
+                            label: 'Status Verifikasi',
+                            value: verif.status ?? '-',
+                            iconColor: Colors.green,
+                          ),
+                          _buildDetailCard(
+                            icon: Icons.schedule_rounded,
+                            label: 'Tanggal Verifikasi',
+                            value: verif.verificationAt ?? '-',
+                            iconColor: AppColors.grey,
+                          ),
+                        ] else ...[
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.grey.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.grey.withOpacity(0.15),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: AppColors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'Belum ada data verifikasi',
+                                    style: TextStyle(
+                                      color: AppColors.grey,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        if (_roleUser == 'koordinator') ...[
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildActionButton(
+                                  text: 'Setujui',
+                                  onPressed: () {
+                                    provider.updateVerificationStatus('approved');
+                                  },
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildActionButton(
+                                  text: 'Tolak',
+                                  onPressed: () {
+                                    provider.updateVerificationStatus('rejected');
+                                  },
+                                  color: AppColors.error,
+                                  isOutlined: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
