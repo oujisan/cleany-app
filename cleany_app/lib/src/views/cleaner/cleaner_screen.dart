@@ -1,3 +1,4 @@
+import 'package:cleany_app/src/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 
 class CleanerScreen extends StatelessWidget {
@@ -6,9 +7,7 @@ class CleanerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Text('Cleaner Screen'),
-      ),
+      bottomNavigationBar: NavbarWidget(),
     );
   }
 }

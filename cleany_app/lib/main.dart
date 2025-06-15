@@ -15,13 +15,15 @@ import 'src/views/home/home_screen.dart';
 import 'src/views/cleaner/cleaner_screen.dart';
 import 'src/views/task/add_report_task_screen.dart';
 import 'src/views/task/report_task_detail.dart';
+import 'package:cleany_app/src/views/task/add_routine_task_screen.dart';
+import 'package:cleany_app/src/views/task/routine_task_detail.dart';
 
 import 'package:cleany_app/src/providers/auth_provider.dart';
 import 'package:cleany_app/src/providers/navbar_provider.dart';
 import 'package:cleany_app/src/providers/home_provider.dart';
 import 'package:cleany_app/src/providers/task_provider.dart';
 import 'package:cleany_app/src/providers/task_detail_provider.dart';
-
+import 'package:cleany_app/src/providers/edit_task_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -46,6 +48,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => TaskDetailProvider()),
+        ChangeNotifierProvider(create: (_) => EditTaskProvider()),
 
       ],
       child: MaterialApp(
@@ -62,9 +65,10 @@ class MainApp extends StatelessWidget {
           '/forgot-password-step3': (context) => ForgotPasswordStep3Screen(),
           '/home': (context) => HomeScreen(),
           '/cleaner': (context) => CleanerScreen(),
-          '/add-task': (context) => AddReportTaskScreen(),
-          '/task-detail': (context) => ReportTaskDetailScreen(),
-
+          '/add-report-task': (context) => AddReportTaskScreen(),
+          '/report-task-detail': (context) => ReportTaskDetailScreen(),
+          '/routine-task-detail': (context) => RoutineTaskDetailScreen(),
+          '/add-routine-task': (context) => AddRoutineTaskScreen(),
         },
         theme: ThemeData(
           useMaterial3: true,

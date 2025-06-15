@@ -10,6 +10,7 @@ class TaskCardWidget extends StatelessWidget {
   final String? time;
   final String? taskType;
   final VoidCallback? onTap;
+  final bool verif;
 
   const TaskCardWidget({
     super.key,
@@ -21,6 +22,7 @@ class TaskCardWidget extends StatelessWidget {
     this.time,
     this.taskType,
     this.onTap,
+    this.verif = false,
   });
 
   Color _getStatusColor() {
@@ -28,7 +30,7 @@ class TaskCardWidget extends StatelessWidget {
       case 'completed':
       case 'selesai':
         return const Color(0xFF10B981); // Green
-      case 'in progress':
+      case 'in_progress':
       case 'sedang dikerjakan':
         return const Color(0xFFF59E0B); // Amber
       case 'pending':
@@ -49,7 +51,7 @@ class TaskCardWidget extends StatelessWidget {
         return 'Dikerjakan';
       case 'pending':
       case 'menunggu':
-        return 'Menunggu';
+        return verif == true ? 'Menunggu Verifikasi' : 'Menunggu';
       default:
         return status;
     }

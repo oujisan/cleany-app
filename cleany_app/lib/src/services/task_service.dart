@@ -141,8 +141,6 @@ class TaskService {
     }
   }
 
-
-
   Future<TaskAssignmentModel> fetchTaskAssignmentDetails(
     String assignmentId,
   ) async {
@@ -280,7 +278,7 @@ class TaskService {
       final apiResponse = json.decode(response.body);
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         _message = apiResponse['message'];
-        return VerificationModel.fromJson(apiResponse['data']);
+        return VerificationModel.fromJson(apiResponse['data'][0]);
       } else {
         _message = apiResponse['message'];
         _error = apiResponse['error'];
@@ -296,9 +294,97 @@ class TaskService {
   Future<bool> updateVerificationStatusTask({
     required String assignmentId,
     required String status,
+    String? feedback,
   }) async {
     final url = Uri.parse(
       AppConstants.apiUpdateVerificationStatusUrl(assignmentId),
+    );
+
+    try {
+      final token = await SecureStorage.read(AppConstants.keyToken);
+
+      if (token == null) {
+        throw Exception("Token not found");
+      }
+
+      final reqBody = {"status": status, "feedback": feedback ?? ''};
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $token',
+        },
+        body: jsonEncode(reqBody),
+      );
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = responseBody['message'];
+        return true;
+      } else {
+        _message = responseBody['message'];
+        _error = responseBody['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  // Method untuk update report task
+  Future<bool> updateReportTask({
+    required String taskId,
+    required String title,
+    required String description,
+    required List<String> imageUrlList,
+    required int areaId,
+  }) async {
+    final url = Uri.parse(AppConstants.apiUpdateReportTaskUrl(taskId));
+
+    try {
+      final requestBody = {
+        'title': title,
+        'description': description,
+        'imageUrl': imageUrlList,
+        'areaId': areaId,
+      };
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization':
+              'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
+        },
+        body: json.encode(requestBody),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = apiResponse['message'] ?? 'Task berhasil diperbarui';
+        return true;
+      } else {
+        _message = apiResponse['message'] ?? 'Gagal memperbarui task';
+        _error = apiResponse['error'] ?? 'Unknown error';
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> addProofImage({
+    required String assignmentId,
+    required List<String> imageUrls,
+  }) async {
+    final url = Uri.parse(
+      AppConstants.apiUpdateTaskProofImagesUrl(assignmentId),
     );
 
     try {
@@ -315,7 +401,37 @@ class TaskService {
           'authorization':
               'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
         },
-        body: jsonEncode(status),
+        body: jsonEncode(imageUrls),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = responseBody['message'];
+        return true;
+      } else {
+        _message = responseBody['message'];
+        _error = responseBody['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> deleteTask(String taskId) async {
+    final url = Uri.parse(AppConstants.apiDeleteTask(taskId));
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization':
+              'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
+        },
       );
 
       final responseBody = jsonDecode(response.body);

@@ -14,7 +14,7 @@ class HomeProvider extends ChangeNotifier {
   List<Map<String, String>> _routineTasks = [];
   bool _isLoadingTasks = false;
   String? _taskError;
-  
+
   // Tab state
   int _selectedTabIndex = 0;
 
@@ -26,9 +26,9 @@ class HomeProvider extends ChangeNotifier {
 
   List<Map<String, String>> get reportTasks => _reportTasks;
   List<Map<String, String>> get routineTasks => _routineTasks;
-  List<Map<String, String>> get currentTasks => 
+  List<Map<String, String>> get currentTasks =>
       _selectedTabIndex == 0 ? _routineTasks : _reportTasks;
-  
+
   bool get isLoadingTasks => _isLoadingTasks;
   String? get taskError => _taskError;
   int get selectedTabIndex => _selectedTabIndex;
@@ -47,12 +47,12 @@ class HomeProvider extends ChangeNotifier {
       debugPrint('Error loading user profile: $e');
     }
   }
-  
+
   void switchTab(int index) {
     if (index != _selectedTabIndex) {
       _selectedTabIndex = index;
       notifyListeners();
-      
+
       // Load tasks for the selected tab if not loaded yet
       if (index == 0 && _routineTasks.isEmpty) {
         fetchRoutineTasks();
@@ -100,11 +100,10 @@ class HomeProvider extends ChangeNotifier {
 
     try {
       List<Map<String, String>> tasks = [];
-  
+
       if (_role == 'user') {
         tasks = await _taskService.fetchReportTasks(_id);
-      }
-      else if (_role == 'koordinator' || _role == 'cleaner') {
+      } else if (_role == 'koordinator' || _role == 'cleaner') {
         tasks = await _taskService.fetchAllReportTasks();
       }
       _reportTasks = tasks.map((task) => task).toList();

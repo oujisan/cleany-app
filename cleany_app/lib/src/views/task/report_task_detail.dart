@@ -1,10 +1,15 @@
 import 'package:cleany_app/core/colors.dart';
 import 'package:cleany_app/src/providers/task_detail_provider.dart';
+import 'package:cleany_app/src/providers/task_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cleany_app/core/constant.dart';
 import 'package:cleany_app/core/secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:cleany_app/src/views/task/edit_report_task_screen.dart';
 
 class ReportTaskDetailScreen extends StatefulWidget {
   const ReportTaskDetailScreen({super.key});
@@ -15,6 +20,9 @@ class ReportTaskDetailScreen extends StatefulWidget {
 
 class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
   late String _roleUser = '';
+  late String _usernameUser = '';
+  List<File> _localImages = [];
+  List<String> _proofImageUrls = [];
 
   @override
   void initState() {
@@ -30,66 +38,237 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
     provider.fetchVerificationTask();
 
     final role = await SecureStorage.read(AppConstants.keyRole);
+    final username = await SecureStorage.read(AppConstants.keyUsername);
     setState(() {
       _roleUser = role ?? '';
+      _usernameUser = username ?? '';
     });
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final status = await Permission.camera.status;
+
+    if (status.isGranted || await Permission.camera.request().isGranted) {
+      final pickedImage = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 80,
+      );
+      if (pickedImage != null) {
+        setState(() {
+          _localImages.add(File(pickedImage.path));
+        });
+      }
+    } else if (status.isPermanentlyDenied) {
+      if (!mounted) return;
+      _showPermissionDialog();
+    } else {
+      if (!mounted) return;
+      _showSnackBar('Tidak dapat mengakses kamera', isError: true);
+    }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppColors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Izin Kamera Diperlukan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.black,
+              ),
+            ),
+            content: const Text(
+              'Aplikasi memerlukan izin kamera untuk mengambil foto. Silakan berikan izin melalui pengaturan.',
+              style: TextStyle(color: AppColors.black),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Batal',
+                  style: TextStyle(color: AppColors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Buka Pengaturan',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.error : AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _showImagePreview(String imageUrl) {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => Dialog.fullscreen(
-        backgroundColor: AppColors.black,
-        child: Stack(
-          children: [
-            Center(
-              child: InteractiveViewer(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: AppColors.black,
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.broken_image_rounded,
-                            size: 80,
-                            color: AppColors.white,
+      builder:
+          (context) => Dialog.fullscreen(
+            backgroundColor: AppColors.black,
+            child: Stack(
+              children: [
+                Center(
+                  child: InteractiveViewer(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.black,
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image_rounded,
+                                size: 80,
+                                color: AppColors.white,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Gagal memuat gambar',
+                                style: TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Gagal memuat gambar',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-              top: 50,
-              right: 16,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: AppColors.white,
-                    size: 24,
+                        );
+                      },
+                    ),
                   ),
                 ),
+                Positioned(
+                  top: 50,
+                  right: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  void _showImagePickerBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Pilih Sumber Foto',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildImageSourceButton(
+                        icon: Icons.camera_alt_outlined,
+                        label: 'Kamera',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _pickImage(ImageSource.camera);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildImageSourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 32, color: AppColors.primary),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppColors.black,
               ),
             ),
           ],
@@ -98,15 +277,15 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
     );
   }
 
-  Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(String status, {bool verif = false}) {
     Color chipColor;
     String statusText;
     IconData statusIcon;
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
         chipColor = AppColors.secondary;
-        statusText = 'Menunggu';
+        statusText = verif ? 'Menunggu Verifikasi' : 'Menunggu';
         statusIcon = Icons.schedule_rounded;
         break;
       case 'in_progress':
@@ -140,19 +319,12 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
       decoration: BoxDecoration(
         color: chipColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: chipColor.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: chipColor.withOpacity(0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            statusIcon,
-            size: 14,
-            color: chipColor,
-          ),
+          Icon(statusIcon, size: 14, color: chipColor),
           const SizedBox(width: 4),
           Text(
             statusText,
@@ -179,10 +351,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.grey.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.grey.withOpacity(0.3), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,11 +362,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
               color: (iconColor ?? AppColors.primary).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: iconColor ?? AppColors.primary,
-            ),
+            child: Icon(icon, size: 18, color: iconColor ?? AppColors.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -376,6 +541,24 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
     );
   }
 
+  Widget _buildFormField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+
   Widget _buildActionButton({
     required String text,
     required VoidCallback onPressed,
@@ -384,44 +567,112 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
   }) {
     return SizedBox(
       height: 48,
-      child: isOutlined
-          ? OutlinedButton(
-              onPressed: onPressed,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: color, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child:
+          isOutlined
+              ? OutlinedButton(
+                onPressed: onPressed,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: color, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              )
+              : ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: AppColors.white,
+                  elevation: 2,
+                  shadowColor: color.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            )
-          : ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                foregroundColor: AppColors.white,
-                elevation: 2,
-                shadowColor: color.withOpacity(0.3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
     );
+  }
+
+  Future<void> _handleUpdateStatus(
+    BuildContext context,
+    TaskDetailProvider taskProvider,
+    String status,
+  ) async {
+    final result = await taskProvider.updateTaskStatus(status);
+
+    if (result) {
+      if (!context.mounted) return;
+      _showSnackBar('Tugas Diterima! Segera selesaikan tugas.');
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      if (!context.mounted) return;
+      _showSnackBar('Gagal menerima tugas. Silakan coba lagi.', isError: true);
+    }
+  }
+
+  Future<void> _handleDeleteTask(
+    TaskDetailProvider provider,
+    String taskId
+  ) async {
+    final success = await provider.deleteTask(taskId);
+      if (success) {
+        _showSnackBar('Laporan berhasil dihapus!');
+      } else {
+        _showSnackBar(
+          'Gagal menghapus laporan. Silakan coba lagi.',
+          isError: true,
+        );
+      }
+  }
+
+  Future<void> _handleProofImageUpload(
+    BuildContext context,
+    List<File> proofImages,
+    TaskDetailProvider taskDetailProvider,
+  ) async {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    for (File img in proofImages) {
+      final imageUrl = await taskProvider.uploadImageToCloudinary(img);
+      if (imageUrl != null) {
+        _proofImageUrls.add(imageUrl);
+      }
+    }
+
+    await taskDetailProvider.addProofImage(_proofImageUrls);
+  }
+
+  Future<void> _handleVerificationStatusUpdate(
+    BuildContext context,
+    TaskDetailProvider taskDetailProvider,
+    String status,
+  ) async {
+    final success = await taskDetailProvider.updateVerificationStatus(status);
+    if (success) {
+      if (!context.mounted) return;
+      _showSnackBar('Verifikasi tugas berhasil!');
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      if (!context.mounted) return;
+      _showSnackBar(
+        'Gagal memperbarui verifikasi tugas. Silakan coba lagi.',
+        isError: true,
+      );
+    }
   }
 
   @override
@@ -431,10 +682,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
       appBar: AppBar(
         title: const Text(
           'Detail Laporan',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
@@ -443,21 +691,17 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
         actions: [
           Consumer<TaskDetailProvider>(
             builder: (context, provider, _) {
-              if (provider.task?.status == 'pending') {
+              if (provider.task?.status == 'pending' && _usernameUser == provider.createdBy) {
                 return Row(
                   children: [
                     IconButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Fitur edit akan segera tersedia'),
-                            backgroundColor: AppColors.primary,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        );
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(
+                          builder: (context) => EditReportTaskScreen(assignmentId: provider.taskAssignmentId,),
+                        )
+                      );
                       },
                       icon: const Icon(Icons.edit_rounded),
                     ),
@@ -465,49 +709,44 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            title: const Text(
-                              'Hapus Laporan',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            content: const Text(
-                              'Apakah Anda yakin ingin menghapus laporan ini?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(
-                                  'Batal',
-                                  style: TextStyle(color: AppColors.grey),
+                          builder:
+                              (context) => AlertDialog(
+                                backgroundColor: AppColors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text('Fitur hapus akan segera tersedia'),
-                                      backgroundColor: AppColors.error,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                title: const Text(
+                                  'Hapus Laporan',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                content: const Text(
+                                  'Apakah Anda yakin ingin menghapus laporan ini?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      'Batal',
+                                      style: TextStyle(color: AppColors.grey),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      
+                                      _handleDeleteTask(provider, provider.taskId);
+                                      Navigator.pushReplacementNamed(context, '/home');
+                                    }
+                                    ,
+                                    child: const Text(
+                                      'Hapus',
+                                      style: TextStyle(
+                                        color: AppColors.error,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Hapus',
-                                  style: TextStyle(
-                                    color: AppColors.error,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
                         );
                       },
                       icon: const Icon(Icons.delete_rounded),
@@ -557,24 +796,17 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
 
           final asn = provider.task;
           final verif = provider.verification;
-          
+
           if (asn == null) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.inbox_rounded,
-                    size: 48,
-                    color: AppColors.grey,
-                  ),
+                  Icon(Icons.inbox_rounded, size: 48, color: AppColors.grey),
                   SizedBox(height: 16),
                   Text(
                     'Data tidak tersedia',
-                    style: TextStyle(
-                      color: AppColors.grey,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: AppColors.grey, fontSize: 14),
                   ),
                 ],
               ),
@@ -625,7 +857,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          _buildStatusChip(asn.status),
+                          verif != null && asn.status == 'completed' ? _buildStatusChip(verif.status!, verif: true) : _buildStatusChip(asn.status),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -657,9 +889,10 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                 _buildDetailCard(
                   icon: Icons.location_on_rounded,
                   label: 'Lokasi',
-                  value: '${asn.task.area.name} - ${asn.task.area.building} - Lt. ${asn.task.area.floor}',
+                  value:
+                      '${asn.task.area.name} - ${asn.task.area.building} - Lt. ${asn.task.area.floor}',
                 ),
-                
+
                 _buildDetailCard(
                   icon: Icons.calendar_today_rounded,
                   label: 'Dibuat pada',
@@ -668,14 +901,14 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                   ),
                   iconColor: AppColors.secondary,
                 ),
-                
+
                 _buildDetailCard(
                   icon: Icons.person_rounded,
                   label: 'Dibuat oleh',
                   value: asn.task.createdBy,
                   iconColor: AppColors.primary,
                 ),
-                
+
                 if (asn.workedBy != null)
                   _buildDetailCard(
                     icon: Icons.engineering_rounded,
@@ -683,7 +916,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                     value: asn.workedBy!,
                     iconColor: Colors.orange,
                   ),
-                
+
                 if (asn.assignmentAt != null)
                   _buildDetailCard(
                     icon: Icons.work_history_rounded,
@@ -691,7 +924,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                     value: asn.assignmentAt!,
                     iconColor: AppColors.secondary,
                   ),
-                
+
                 if (asn.completeAt != null)
                   _buildDetailCard(
                     icon: Icons.check_circle_rounded,
@@ -708,9 +941,149 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                   imageUrls: asn.task.taskImageUrl ?? [],
                 ),
 
+                if (asn.status == 'in_progress' && _roleUser == 'cleaner')
+                  _buildFormField(
+                    label: 'Bukti Foto Pengerjaan Laporan',
+                    child: Column(
+                      children: [
+                        if (_localImages.isEmpty)
+                          InkWell(
+                            onTap: _showImagePickerBottomSheet,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: double.infinity,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppColors.grey.withOpacity(0.3),
+                                  width: 2,
+                                  style: BorderStyle.solid,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: AppColors.grey.withOpacity(0.05),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_upload_outlined,
+                                    size: 40,
+                                    color: AppColors.grey.withOpacity(0.6),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Ketuk untuk upload foto',
+                                    style: TextStyle(
+                                      color: AppColors.grey.withOpacity(0.8),
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Minimal 1 foto diperlukan',
+                                    style: TextStyle(
+                                      color: AppColors.grey.withOpacity(0.6),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          Column(
+                            children: [
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _localImages.length,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 3,
+                                      crossAxisSpacing: 12,
+                                      mainAxisSpacing: 12,
+                                    ),
+                                itemBuilder: (context, index) {
+                                  final imageFile = _localImages[index];
+                                  return Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.file(
+                                          imageFile,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _localImages.removeAt(index);
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.error,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: const Icon(
+                                              Icons.close,
+                                              color: AppColors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+
+                              OutlinedButton.icon(
+                                onPressed: _showImagePickerBottomSheet,
+                                icon: const Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                ),
+                                label: const Text('Tambah Foto'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  side: const BorderSide(
+                                    color: AppColors.primary,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                SizedBox(height: 32),
+
                 // Proof Images
-                if (asn.status == 'completed' && 
-                    asn.proofImageUrl != null && 
+                if (asn.status == 'completed' &&
+                    asn.proofImageUrl != null &&
                     asn.proofImageUrl!.isNotEmpty)
                   _buildImageGrid(
                     title: 'Foto Bukti Pengerjaan',
@@ -718,37 +1091,66 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                   ),
 
                 // Action Button for Cleaner
-                if (_roleUser == 'cleaner' && asn.status != 'approved' && asn.status != 'rejected')
+                if (_roleUser == 'cleaner' &&
+                    asn.status != 'approved' &&
+                    asn.status != 'rejected')
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.only(bottom: 24),
-                    child: _buildActionButton(
-                      text: asn.status == 'pending'
-                          ? 'Mulai Pengerjaan'
-                          : asn.status == 'in_progress'
-                          ? 'Selesai Pengerjaan'
-                          : 'Laporan Selesai',
-                      onPressed: () {
-                        String newStatus;
-                        if (asn.status == 'pending') {
-                          newStatus = 'in_progress';
-                        } else if (asn.status == 'in_progress') {
-                          newStatus = 'completed';
-                        } else {
-                          newStatus = 'pending';
-                        }
-                        provider.updateTaskStatus(newStatus);
-                      },
-                      color: asn.status == 'pending'
-                          ? AppColors.primary
-                          : asn.status == 'in_progress'
-                          ? Colors.green
-                          : AppColors.grey,
-                    ),
+                    child:
+                        asn.status == 'completed'
+                            ? null
+                            : _buildActionButton(
+                              text:
+                                  asn.status == 'pending'
+                                      ? 'Mulai Pengerjaan'
+                                      : asn.status == 'in_progress'
+                                      ? 'Selesai Pengerjaan'
+                                      : 'Laporan Selesai',
+                              onPressed: () {
+                                String newStatus;
+                                if (asn.status == 'pending') {
+                                  newStatus = 'in_progress';
+                                  _handleUpdateStatus(
+                                    context,
+                                    provider,
+                                    newStatus,
+                                  );
+                                } else if (asn.status == 'in_progress') {
+                                  newStatus = 'completed';
+                                  if (_localImages.isNotEmpty) {
+                                    _handleUpdateStatus(
+                                      context,
+                                      provider,
+                                      newStatus,
+                                    );
+                                    _handleProofImageUpload(
+                                      context,
+                                      _localImages,
+                                      provider,
+                                    );
+                                  } else {
+                                    _showSnackBar(
+                                      'Harap upload foto bukti pengerjaan terlebih dahulu.',
+                                      isError: true,
+                                    );
+                                  }
+                                } else {
+                                  newStatus = 'pending';
+                                }
+                                // provider.updateTaskStatus(newStatus);
+                              },
+                              color:
+                                  asn.status == 'pending'
+                                      ? AppColors.primary
+                                      : asn.status == 'in_progress'
+                                      ? Colors.green
+                                      : AppColors.grey,
+                            ),
                   ),
 
                 // Verification Section
-                if ((_roleUser == 'koordinator' || _roleUser == 'cleaner') && 
+                if ((_roleUser == 'koordinator' || _roleUser == 'cleaner') &&
                     asn.status == 'completed')
                   Container(
                     width: double.infinity,
@@ -798,7 +1200,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        
+
                         if (verif != null) ...[
                           _buildDetailCard(
                             icon: Icons.person_outline_rounded,
@@ -852,7 +1254,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                           ),
                         ],
 
-                        if (_roleUser == 'koordinator') ...[
+                        if (_roleUser == 'koordinator' && verif!.status == 'pending') ...[
                           const SizedBox(height: 20),
                           Row(
                             children: [
@@ -860,7 +1262,11 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                                 child: _buildActionButton(
                                   text: 'Setujui',
                                   onPressed: () {
-                                    provider.updateVerificationStatus('approved');
+                                    _handleVerificationStatusUpdate(
+                                      context,
+                                      provider,
+                                      'approved',
+                                    );
                                   },
                                   color: Colors.green,
                                 ),
@@ -870,7 +1276,11 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                                 child: _buildActionButton(
                                   text: 'Tolak',
                                   onPressed: () {
-                                    provider.updateVerificationStatus('rejected');
+                                    _handleVerificationStatusUpdate(
+                                      context,
+                                      provider,
+                                      'approved',
+                                    );
                                   },
                                   color: AppColors.error,
                                   isOutlined: true,

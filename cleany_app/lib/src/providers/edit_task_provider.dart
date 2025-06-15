@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cleany_app/src/models/task_assignment_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
@@ -13,7 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cleany_app/src/services/task_service.dart';
 
-class TaskProvider extends ChangeNotifier {
+class EditTaskProvider extends ChangeNotifier {
   String _title = '';
   String _description = '';
   String _username = '';
@@ -23,6 +24,8 @@ class TaskProvider extends ChangeNotifier {
   String _error = '';
   String _message = '';
   List<String> _taskImageUrls = [];
+  String _assignmentId = '';
+  TaskAssignmentModel? _task;
 
   final AreaService _areaService = AreaService();
   final TaskService _taskService = TaskService();
@@ -37,6 +40,8 @@ class TaskProvider extends ChangeNotifier {
   String get getError => _error;
   String get getMessage => _message;
   List<String> get taskImageUrls => _taskImageUrls;
+  String get assignmentId => _assignmentId;
+  TaskAssignmentModel? get task => _task;
 
   // Initialization
   Future<void> initializeData() async {
@@ -54,6 +59,20 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadTaskDetails() async {
+    try {
+      final result = await _taskService.fetchTaskAssignmentDetails(
+        _assignmentId,
+      );
+      setTitle(result.task.title);
+      setDescription(result.task.description!);
+      setSelectedAreaId(result.task.area.areaId);
+    } catch (e) {
+      _error = 'Gagal memuat detail tugas: $e';
+      _task = null;
+    }
+  }
+
   // Form setters
   void setTitle(String title) {
     _title = title;
@@ -67,6 +86,11 @@ class TaskProvider extends ChangeNotifier {
 
   void setSelectedAreaId(String? areaId) {
     _selectedAreaId = areaId;
+    notifyListeners();
+  }
+
+  void setTaskImageUrl(List<String> imageUrls) {
+    _taskImageUrls = imageUrls;
     notifyListeners();
   }
 
@@ -190,4 +214,60 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
   
+  // Method untuk fetch detail task assignment
+  Future<TaskAssignmentModel> fetchTaskAssignmentDetails(String? assignmentId) async {
+    try {
+      final taskAssignment = await _taskService.fetchTaskAssignmentDetails(assignmentId!);
+      return taskAssignment;
+    } catch (e) {
+      _error = 'Gagal mengambil detail task: ${e.toString()}';
+      notifyListeners();
+      return TaskAssignmentModel.empty();
+    }
+  }
+
+  // Method untuk update task
+  Future<bool> updateTask({
+    required String taskId,
+    required List<String> imageUrlList,
+  }) async {
+    try {
+      final areaId = int.tryParse(_selectedAreaId ?? '');
+      if (areaId == null) {
+        _error = 'Area tidak valid';
+        notifyListeners();
+        return false;
+      }
+      final isSuccess = await _taskService.updateReportTask(
+        taskId: taskId,
+        title: _title.trim(),
+        description: _description.trim(),
+        imageUrlList: imageUrlList,
+        areaId: areaId,
+      );
+
+      _message = _taskService.getMessage;
+      notifyListeners();
+      return isSuccess;
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Method untuk reset task image URLs (berguna saat edit)
+  void resetTaskImageUrls() {
+    _taskImageUrls.clear();
+    notifyListeners();
+  }
+
+  // Method untuk set initial data dari task assignment
+  void setInitialDataFromTaskAssignment(String title, String description, String areaId) {
+    _title = title;
+    _description = description;
+    _selectedAreaId = areaId;
+    notifyListeners();
+  }
+
 }

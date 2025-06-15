@@ -1,9 +1,7 @@
 class VerificationModel {
   final String verificationId;
   final String assignmentId;
-  final String? userId;
   final String? username;
-  final String? role;
   final String? status;
   final String? feedback;
   final String? verificationAt;
@@ -11,9 +9,7 @@ class VerificationModel {
   VerificationModel({
     required this.verificationId,
     required this.assignmentId,
-    required this.userId,
     this.username,
-    this.role,
     this.status,
     this.feedback,
     this.verificationAt,
@@ -23,9 +19,7 @@ class VerificationModel {
       VerificationModel(
         verificationId: json['verification_id'].toString(),
         assignmentId: json['assignment_id'].toString(),
-        userId: json['verification_by']['userId'].toString(),
-        username: json['verification_by']['username'] ?? '',
-        role: json['verification_by']['role'] ?? '',
+        username: json['verification_by']?['username'] ?? '',
         status: json['status'] ?? '',
         feedback: json['feedback'] ?? '',
         verificationAt: json['verification_at'] ?? '',
@@ -34,9 +28,7 @@ class VerificationModel {
   static VerificationModel empty() => VerificationModel(
     verificationId: '',
     assignmentId: '',
-    userId: '',
     username: '',
-    role: '',
     status: '',
     feedback: '',
     verificationAt: '',

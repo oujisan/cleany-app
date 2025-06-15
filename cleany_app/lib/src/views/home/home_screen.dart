@@ -322,7 +322,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           if (homeProvider.role == 'user') {
             return Column(
               children: [
-                // Header untuk user
                 Row(
                   children: [
                     Container(
@@ -378,7 +377,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Expanded(child: _buildTabSelector()),
                 const SizedBox(width: 16),
-                _buildAddTaskButton(),
+                if (!(homeProvider.isRoutineSelected &&
+                    homeProvider.role != 'koordinator'))
+                  _buildAddTaskButton(homeProvider),
               ],
             );
           }
@@ -407,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            Navigator.pushNamed(context, '/add-task');
+            Navigator.pushNamed(context, '/add-report-task');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -520,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAddTaskButton() {
+  Widget _buildAddTaskButton(HomeProvider homeProvider) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -540,7 +541,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           borderRadius: BorderRadius.circular(25),
           onTap: () {
-            Navigator.pushNamed(context, '/add-task');
+            if (homeProvider.role == 'koordinator' && homeProvider.isRoutineSelected) {
+              Navigator.pushNamed(context, '/add-routine-task');
+            }
+            else{
+              Navigator.pushNamed(context, '/add-report-task');
+            }
           },
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -829,7 +835,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   listen: false,
                 ).setTaskAssignmentId(taskId!);
 
-                Navigator.pushNamed(context, '/task-detail', arguments: task);
+                if (isRoutineSelected){
+                  Navigator.pushNamed(context, '/routine-task-detail', arguments: task);
+                }
+                else {
+                  Navigator.pushNamed(context, '/report-task-detail', arguments: task);
+                }
               },
             ),
           );

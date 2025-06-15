@@ -5,7 +5,6 @@ import 'package:cleany_app/src/services/task_service.dart';
 import 'package:cleany_app/core/secure_storage.dart';
 import 'package:cleany_app/core/constant.dart';
 
-
 class TaskDetailProvider extends ChangeNotifier {
   final TaskService _taskService = TaskService();
 
@@ -15,6 +14,9 @@ class TaskDetailProvider extends ChangeNotifier {
   String? _error;
   String _role = '';
   VerificationModel? _verification;
+  String _createdBy = '';
+  String _username = '';
+  String _taskId = '';
 
   // Getters
   String? get taskAssignmentId => _taskAssignmentId;
@@ -23,6 +25,9 @@ class TaskDetailProvider extends ChangeNotifier {
   String? get error => _error;
   String get role => _role;
   VerificationModel? get verification => _verification;
+  String get createdBy => _createdBy;
+  String get username => _username;
+  String get taskId => _taskId;
 
   // Set task assignment ID
   void setTaskAssignmentId(String id) {
@@ -32,6 +37,7 @@ class TaskDetailProvider extends ChangeNotifier {
 
   Future<void> loadUserProfile() async {
     _role = await SecureStorage.read(AppConstants.keyRole) ?? '';
+    _username = await SecureStorage.read(AppConstants.keyUsername) ?? '';
     notifyListeners();
   }
 
@@ -47,6 +53,8 @@ class TaskDetailProvider extends ChangeNotifier {
         _taskAssignmentId!,
       );
       _task = result;
+      _createdBy = result.task.createdBy;
+      _taskId = result.task.taskId;
     } catch (e) {
       _error = 'Gagal memuat detail tugas: $e';
       _task = null;
@@ -60,7 +68,9 @@ class TaskDetailProvider extends ChangeNotifier {
     if (_taskAssignmentId == null) return;
 
     try {
-      _verification = await _taskService.fetchVerificationTask(_taskAssignmentId!);
+      _verification = await _taskService.fetchVerificationTask(
+        _taskAssignmentId!,
+      );
       _error = null;
     } catch (e) {
       _verification = null;
@@ -70,9 +80,8 @@ class TaskDetailProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateTaskStatus(String status) async {
-    if (_taskAssignmentId == null) return;
-
+  Future<bool> updateTaskStatus(String status) async {
+    if (_taskAssignmentId == null) return false;
     try {
       final result = await _taskService.updateStatusReportTask(
         assignmentId: _taskAssignmentId!,
@@ -80,16 +89,34 @@ class TaskDetailProvider extends ChangeNotifier {
       );
       if (result) {
         _error = null;
-        notifyListeners();
+        return true;
       }
+      return false;
     } catch (e) {
       _error = 'Gagal memperbarui status tugas: $e';
-      notifyListeners();
+      return false;
     }
   }
 
-  Future<void> updateVerificationStatus(String status) async {
-    if (_taskAssignmentId == null) return;
+  Future<bool> addProofImage(List<String> imageUrls) async {
+    try {
+      final result = await _taskService.addProofImage(
+        assignmentId: _taskAssignmentId!,
+        imageUrls: imageUrls,
+      );
+      if (result) {
+        _error = null;
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _error = 'Gagal menambahkan bukti tugas: $e';
+      return false;
+    }
+  }
+
+  Future<bool> updateVerificationStatus(String status) async {
+    if (_taskAssignmentId == null) return false;
 
     try {
       final result = await _taskService.updateVerificationStatusTask(
@@ -98,12 +125,12 @@ class TaskDetailProvider extends ChangeNotifier {
       );
       if (result) {
         _error = null;
-        notifyListeners();
+        return true;
       }
     } catch (e) {
       _error = 'Gagal memperbarui verifikasi tugas: $e';
-      notifyListeners();
     }
+    return false;
   }
 
   // Clear provider state
@@ -115,5 +142,18 @@ class TaskDetailProvider extends ChangeNotifier {
     _verification = null;
     _role = '';
     notifyListeners();
+  }
+
+  Future<bool> deleteTask(String taskId) async {
+    try {
+      final result = await _taskService.deleteTask(taskId);
+      if (result) {
+        _error = null;
+        return true;
+      }
+    } catch (e) {
+      _error = 'Gagal menghapus tugas: $e';
+    }
+    return false;
   }
 }

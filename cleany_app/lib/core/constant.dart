@@ -17,15 +17,17 @@ class AppConstants {
   static String apiFetchTaskAssignmentByIdUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/$assignmentId";
   static String apiAddReportTaskUrl = "${AppConstants.baseUrl}/api/task/report/add";
   static String apiAddRoutineTaskUrl = "${AppConstants.baseUrl}/api/task/routine/add";
-  static String apiUpdateRoutineTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/routine/$taskId";
-  static String apiUpdateReportTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/report/$taskId";
+  static String apiUpdateRoutineTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/routine/update/$taskId";
+  static String apiUpdateReportTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/report/update/$taskId";
   static String apiDeleteTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/delete/$taskId";
 
   static String apiFetchTaskReportUrl() => "${AppConstants.baseUrl}/api/task/assignment/report";
 
   static String apiUpdateStatusTaskAssignmentUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/update/status/$assignmentId";
   static String apiFetchVerificationByAssignmentIdUrl(String assignmentId) => "${AppConstants.baseUrl}/api/verification/assignment/$assignmentId";
-  static String apiUpdateVerificationStatusUrl(String assignmentId) => "${AppConstants.baseUrl}/api/verification/assignment/update/$assignmentId";
+  static String apiUpdateVerificationStatusUrl(String assignmentId) => "${AppConstants.baseUrl}/api/verification/assigment/update/$assignmentId";
+  static String apiUpdateTaskProofImagesUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/update/proofimageurl/$assignmentId";
+  static String apiDeleteTask(String taskId) => "${AppConstants.baseUrl}/api/task/delete/$taskId";
 
   // UserProfile API Endpoints
   static String apiFetchUserProfileUrl(String userId) => "${AppConstants.baseUrl}/api/userProfile/$userId";

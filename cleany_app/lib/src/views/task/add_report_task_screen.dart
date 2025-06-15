@@ -37,7 +37,10 @@ class _AddReportTaskScreenState extends State<AddReportTaskScreen> {
     final status = await Permission.camera.status;
 
     if (status.isGranted || await Permission.camera.request().isGranted) {
-      final pickedImage = await ImagePicker().pickImage(source: source);
+      final pickedImage = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 80,
+      );
       if (pickedImage != null) {
         setState(() {
           _localImages.add(File(pickedImage.path));
@@ -45,34 +48,80 @@ class _AddReportTaskScreenState extends State<AddReportTaskScreen> {
       }
     } else if (status.isPermanentlyDenied) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Izin kamera ditolak secara permanen. Silakan izinkan melalui Pengaturan.',
-          ),
-          action: SnackBarAction(
-            label: 'Buka Pengaturan',
-            onPressed: openAppSettings,
-          ),
-        ),
-      );
+      _showPermissionDialog();
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat mengakses kamera.')),
-      );
+      _showSnackBar('Tidak dapat mengakses kamera', isError: true);
     }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Izin Kamera Diperlukan',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.black,
+          ),
+        ),
+        content: const Text(
+          'Aplikasi memerlukan izin kamera untuk mengambil foto. Silakan berikan izin melalui pengaturan.',
+          style: TextStyle(color: AppColors.black),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: AppColors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Buka Pengaturan',
+              style: TextStyle(color: AppColors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.error : AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Future<void> _submitTask(TaskProvider provider) async {
     if (!provider.validateForm() || _localImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Harap isi judul, pilih area, dan upload minimal 1 foto',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      _showSnackBar(
+        'Harap isi judul, pilih area, dan upload minimal 1 foto',
+        isError: true,
       );
       return;
     }
@@ -87,34 +136,118 @@ class _AddReportTaskScreenState extends State<AddReportTaskScreen> {
       final task = await provider.submitTask();
       if (task) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Laporan berhasil dibuat!')),
-        );
+        _showSnackBar('Laporan berhasil dibuat!');
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) Navigator.pushReplacementNamed(context, '/home');
-
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gagal mengirim laporan. Silakan coba lagi.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _showSnackBar('Gagal mengirim laporan. Silakan coba lagi.', isError: true);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Terjadi kesalahan: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnackBar('Terjadi kesalahan: $e', isError: true);
       }
     }
 
     setState(() => _isSubmitting = false);
+  }
+
+  void _showImagePickerBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Pilih Sumber Foto',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildImageSourceButton(
+                    icon: Icons.photo_library_outlined,
+                    label: 'Galeri',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.gallery);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildImageSourceButton(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Kamera',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.camera);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageSourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppColors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -123,245 +256,384 @@ class _AddReportTaskScreenState extends State<AddReportTaskScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.white,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Add Report Task',
-          style: TextStyle(color: AppColors.primary),
-        ),
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+              ),
+            )
+          : CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: AppColors.white,
+                  elevation: 0,
+                  pinned: true,
+                  leading: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  title: const Text(
+                    'Buat Laporan',
+                    style: TextStyle(
+                      color: AppColors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 25,
-                              backgroundImage:
-                                  provider.imageUrl.isNotEmpty
-                                      ? NetworkImage(provider.imageUrl)
-                                      : null,
-                              backgroundColor: Colors.grey.shade200,
-                              child:
-                                  provider.imageUrl.isEmpty
-                                      ? const Icon(
-                                        Icons.person,
-                                        color: Colors.grey,
+                        // User Info Card
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.1),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundColor: AppColors.primary.withOpacity(0.1),
+                                backgroundImage: provider.imageUrl.isNotEmpty
+                                    ? NetworkImage(provider.imageUrl)
+                                    : null,
+                                child: provider.imageUrl.isEmpty
+                                    ? const Icon(
+                                        Icons.person_outline,
+                                        color: AppColors.primary,
+                                        size: 28,
                                       )
-                                      : null,
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Created by:',
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  provider.username,
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: 'Title',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                          onChanged: provider.setTitle,
-                        ),
-                        const SizedBox(height: 24),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: 'Description',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                          minLines: 3,
-                          maxLines: 6,
-                          onChanged: provider.setDescription,
-                        ),
-                        const SizedBox(height: 24),
-                        DropdownButtonFormField<String>(
-                          value:
-                              (provider.selectedAreaId ?? '').isNotEmpty
-                                  ? provider.selectedAreaId
-                                  : null,
-                          decoration: InputDecoration(
-                            labelText: 'Pilih Area',
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                          icon: const Icon(Icons.arrow_drop_down),
-                          dropdownColor: Colors.white,
-                          items:
-                              provider.areas.map((area) {
-                                return DropdownMenuItem<String>(
-                                  value: area.areaId,
-                                  child: Text(
-                                    '${area.name} - ${area.building}',
-                                  ),
-                                );
-                              }).toList(),
-                          onChanged: provider.setSelectedAreaId,
-                          menuMaxHeight: 200,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Upload Foto Tugas',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.photo),
-                              label: const Text('Galeri'),
-                              onPressed: () => _pickImage(ImageSource.gallery),
-                            ),
-                            const SizedBox(width: 10),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.camera_alt),
-                              label: const Text('Kamera'),
-                              onPressed: () => _pickImage(ImageSource.camera),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _localImages.isNotEmpty
-                            ? GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _localImages.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
-                                  ),
-                              itemBuilder: (context, index) {
-                                final imageFile = _localImages[index];
-                                return Stack(
+                                    : null,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(
-                                        imageFile,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        fit: BoxFit.cover,
+                                    Text(
+                                      'Dibuat oleh',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.grey.withOpacity(0.8),
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _localImages.removeAt(index);
-                                          });
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(
-                                              0.5,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      provider.username,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Form Fields
+                        _buildFormField(
+                          label: 'Judul Laporan',
+                          child: TextField(
+                            decoration: _buildInputDecoration('Masukkan judul laporan'),
+                            style: const TextStyle(color: AppColors.black),
+                            onChanged: provider.setTitle,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        _buildFormField(
+                          label: 'Deskripsi',
+                          child: TextField(
+                            decoration: _buildInputDecoration('Jelaskan detail laporan'),
+                            style: const TextStyle(color: AppColors.black),
+                            minLines: 3,
+                            maxLines: 6,
+                            onChanged: provider.setDescription,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        _buildFormField(
+                          label: 'Area',
+                          child: DropdownButtonFormField<String>(
+                            value: (provider.selectedAreaId ?? '').isNotEmpty
+                                ? provider.selectedAreaId
+                                : null,
+                            decoration: _buildInputDecoration('Pilih area'),
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down,
+                              color: AppColors.primary,
+                            ),
+                            dropdownColor: AppColors.white,
+                            style: const TextStyle(color: AppColors.black),
+                            items: provider.areas.map((area) {
+                              return DropdownMenuItem<String>(
+                                value: area.areaId,
+                                child: Text('${area.name} - ${area.building}'),
+                              );
+                            }).toList(),
+                            onChanged: provider.setSelectedAreaId,
+                            menuMaxHeight: 200,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Upload Photo Section
+                        _buildFormField(
+                          label: 'Foto Laporan',
+                          child: Column(
+                            children: [
+                              if (_localImages.isEmpty)
+                                InkWell(
+                                  onTap: _showImagePickerBottomSheet,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: AppColors.grey.withOpacity(0.3),
+                                        width: 2,
+                                        style: BorderStyle.solid,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: AppColors.grey.withOpacity(0.05),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.cloud_upload_outlined,
+                                          size: 40,
+                                          color: AppColors.grey.withOpacity(0.6),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Ketuk untuk upload foto',
+                                          style: TextStyle(
+                                            color: AppColors.grey.withOpacity(0.8),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Minimal 1 foto diperlukan',
+                                          style: TextStyle(
+                                            color: AppColors.grey.withOpacity(0.6),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                Column(
+                                  children: [
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: _localImages.length,
+                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 3,
+                                        crossAxisSpacing: 12,
+                                        mainAxisSpacing: 12,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        final imageFile = _localImages[index];
+                                        return Stack(
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(12),
+                                              child: Image.file(
+                                                imageFile,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.close,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
+                                            Positioned(
+                                              top: 8,
+                                              right: 8,
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    _localImages.removeAt(index);
+                                                  });
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(4),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.error,
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black.withOpacity(0.2),
+                                                        blurRadius: 4,
+                                                        offset: const Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    color: AppColors.white,
+                                                    size: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                    OutlinedButton.icon(
+                                      onPressed: _showImagePickerBottomSheet,
+                                      icon: const Icon(Icons.add_photo_alternate_outlined),
+                                      label: const Text('Tambah Foto'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        side: const BorderSide(color: AppColors.primary),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                       ),
                                     ),
                                   ],
-                                );
-                              },
-                            )
-                            : Container(
-                              width: double.infinity,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.grey.shade400,
-                                  width: 1.5,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.grey.shade100,
-                              ),
-                              child: const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.image,
-                                      size: 40,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'Belum ada foto yang diupload',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed:
-                              _isSubmitting
-                                  ? null
-                                  : () => _submitTask(provider),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            ],
                           ),
-                          child:
-                              _isSubmitting
-                                  ? const Center(
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Submit Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isSubmitting ? null : () => _submitTask(provider),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              disabledBackgroundColor: AppColors.grey.withOpacity(0.3),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
                                     child: CircularProgressIndicator(
-                                      color: Colors.white,
+                                      color: AppColors.white,
+                                      strokeWidth: 2.5,
                                     ),
                                   )
-                                  : const Center(
-                                    child: Text(
-                                      'Simpan',
-                                      style: TextStyle(color: Colors.white),
+                                : const Text(
+                                    'Simpan Laporan',
+                                    style: TextStyle(
+                                      color: AppColors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                          ),
                         ),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
-              ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildFormField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hintText) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: AppColors.grey.withOpacity(0.7),
+        fontSize: 14,
+      ),
+      filled: true,
+      fillColor: AppColors.grey.withOpacity(0.05),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppColors.grey.withOpacity(0.2),
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppColors.grey.withOpacity(0.2),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: AppColors.primary,
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: AppColors.error,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
     );
   }
 }
