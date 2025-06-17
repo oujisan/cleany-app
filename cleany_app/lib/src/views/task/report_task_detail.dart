@@ -1138,7 +1138,6 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                                 } else {
                                   newStatus = 'pending';
                                 }
-                                // provider.updateTaskStatus(newStatus);
                               },
                               color:
                                   asn.status == 'pending'

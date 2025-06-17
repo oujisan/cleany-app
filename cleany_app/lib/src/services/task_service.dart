@@ -221,6 +221,63 @@ class TaskService {
     }
   }
 
+  Future<bool> addRoutineTask({
+    required String title,
+    required String description,
+    required String areaId,
+    required String time,
+    List<String>? imageUrlList,
+    required String startDate,
+    required String endDate,
+    required List<int> days,
+  }) async {
+    final url = Uri.parse(AppConstants.apiAddRoutineTaskUrl);
+
+    try {
+      final token = await SecureStorage.read(AppConstants.keyToken);
+
+      if (token == null) {
+        throw Exception("Token not found");
+      }
+
+      final requestBody = {
+        "title": title,
+        "description": description,
+        "areaId": areaId,
+        "time": time,
+        "imageUrl": imageUrlList,
+        "startDate": startDate,
+        "endDate": endDate,
+        "daysOfWeek": days,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization':
+              'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = responseBody['message'];
+        return true;
+      } else {
+        _message = responseBody['message'];
+        _error = responseBody['error'];
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
   Future<bool> updateStatusReportTask({
     required String assignmentId,
     required String status,
@@ -350,6 +407,58 @@ class TaskService {
         'description': description,
         'imageUrl': imageUrlList,
         'areaId': areaId,
+      };
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization':
+              'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
+        },
+        body: json.encode(requestBody),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = apiResponse['message'] ?? 'Task berhasil diperbarui';
+        return true;
+      } else {
+        _message = apiResponse['message'] ?? 'Gagal memperbarui task';
+        _error = apiResponse['error'] ?? 'Unknown error';
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> updateRoutineTask({
+    required String taskId,
+    required String title,
+    required String description,
+    required List<String> imageUrlList,
+    required String areaId,
+    required String time,
+    required String startDate,
+    required String endDate,
+    required List<int> days,
+  }) async {
+    final url = Uri.parse(AppConstants.apiUpdateRoutineTaskUrl(taskId));
+
+    try {
+      final requestBody = {
+        'title': title,
+        'description': description,
+        'imageUrl': imageUrlList,
+        'areaId': areaId,
+        'time': time,
+        'startDate': startDate,
+        'endDate': endDate,
+        'daysOfWeek': days,
       };
 
       final response = await http.put(

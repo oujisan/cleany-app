@@ -30,30 +30,21 @@ class NavbarWidget extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/cleaner');
             break;
           case 2:
-            Navigator.pushNamedAndRemoveUntil(context, '/history', (route) => false);
+            Navigator.pushReplacementNamed(context, '/history');
             break;
           case 3:
-            Navigator.pushNamedAndRemoveUntil(context, '/profile', (route) => false);
+            Navigator.pushReplacementNamed(context, '/profile');
             break;
         }
       },
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.cleaning_services),
           label: 'Cleaner',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history),
-          label: 'History',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }

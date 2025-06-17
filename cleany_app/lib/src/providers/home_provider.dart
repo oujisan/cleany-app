@@ -62,6 +62,20 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
+  void switchTabHistory(int index) {
+    if (index != _selectedTabIndex) {
+      _selectedTabIndex = index;
+      notifyListeners();
+
+      // Load tasks for the selected tab if not loaded yet
+      if (index == 0 && _routineTasks.isEmpty) {
+        fetchRoutineTasksCompleted();
+      } else if (index == 1 && _reportTasks.isEmpty) {
+        fetchReportTasksCompleted();
+      }
+    }
+  }
+
   Future<void> fetchRoutineTasks() async {
     if (_id.isEmpty) {
       _taskError = "User ID is empty";
@@ -76,6 +90,30 @@ class HomeProvider extends ChangeNotifier {
     try {
       final tasks = await _taskService.fetchRoutineTasks();
       _routineTasks = tasks.map((task) => task).toList();
+    } catch (e) {
+      _taskError = e.toString();
+      _routineTasks = [];
+      debugPrint('Error fetching routine tasks: $e');
+    }
+
+    _isLoadingTasks = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchRoutineTasksCompleted() async {
+    if (_id.isEmpty) {
+      _taskError = "User ID is empty";
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingTasks = true;
+    _taskError = null;
+    notifyListeners();
+
+    try {
+      final tasks = await _taskService.fetchRoutineTasks();
+      _routineTasks = tasks.where((task) => task['status'] == 'completed').toList();
     } catch (e) {
       _taskError = e.toString();
       _routineTasks = [];
@@ -117,6 +155,36 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchReportTasksCompleted() async {
+    if (_id.isEmpty) {
+      _taskError = "User ID is empty";
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingTasks = true;
+    _taskError = null;
+    notifyListeners();
+
+    try {
+      List<Map<String, String>> tasks = [];
+
+      if (_role == 'user') {
+        tasks = await _taskService.fetchReportTasks(_id);
+      } else if (_role == 'koordinator' || _role == 'cleaner') {
+        tasks = await _taskService.fetchAllReportTasks();
+      }
+      _reportTasks = tasks.where((task) => task['status'] == 'completed').toList();
+    } catch (e) {
+      _taskError = e.toString();
+      _reportTasks = [];
+      debugPrint('Error fetching report tasks: $e');
+    }
+
+    _isLoadingTasks = false;
+    notifyListeners();
+  }
+
   /// Initialize all data
   Future<void> initializeData() async {
     await loadUserProfile();
@@ -130,6 +198,21 @@ class HomeProvider extends ChangeNotifier {
     } else {
       await fetchReportTasks();
     }
+  }
+
+
+  Future<void> refreshCurrentTasksHistory() async {
+    if (_selectedTabIndex == 0) {
+      await fetchRoutineTasksCompleted();
+    } else {
+      await fetchReportTasksCompleted();
+    }
+  }
+
+  Future<void> initializeDataHistory() async {
+    await loadUserProfile();
+    await fetchRoutineTasksCompleted();
+    await fetchReportTasksCompleted();
   }
 
   /// Clear all data (useful for logout)
