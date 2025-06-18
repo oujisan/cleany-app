@@ -8,14 +8,15 @@ import 'package:intl/intl.dart';
 import 'package:cleany_app/src/providers/task_detail_provider.dart';
 import 'package:cleany_app/src/providers/auth_provider.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HistoryScreen extends StatefulWidget {
+  const HistoryScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HistoryScreenState extends State<HistoryScreen>
+    with TickerProviderStateMixin {
   late Future<void> _initDataFuture;
   late TabController _tabController;
 
@@ -28,15 +29,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Listen to tab changes
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
-        context.read<HomeProvider>().switchTab(_tabController.index);
+        context.read<HomeProvider>().switchTabHistory(_tabController.index);
       }
     });
   }
 
   Future<void> _initializeData() async {
     final homeProvider = context.read<HomeProvider>();
-    await homeProvider.initializeData();
-    await homeProvider.refreshCurrentTasks();
+    await homeProvider.initializeDataHistory();
+    await homeProvider.refreshCurrentTasksHistory();
 
     if (homeProvider.role == 'user') {
       homeProvider.switchTab(1);
@@ -67,233 +68,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 200,
-      floating: false,
-      pinned: true,
-      backgroundColor: AppColors.primary,
-      automaticallyImplyLeading: false,
+      backgroundColor: AppColors.white,
       elevation: 0,
-      shadowColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              child: FutureBuilder(
-                future: _initDataFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingState();
-                  }
-                  if (snapshot.hasError) {
-                    return _buildErrorState();
-                  }
-                  return _buildHeaderContent();
-                },
-              ),
-            ),
-          ),
+      pinned: true,
+      title: const Text(
+        'Halaman Riwayat',
+        style: TextStyle(
+          color: AppColors.black,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
         ),
       ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return const Center(
-      child: Text(
-        'Error loading user data',
-        style: TextStyle(color: Colors.white70, fontSize: 16),
-      ),
-    );
-  }
-
-  Widget _buildHeaderContent() {
-    return Consumer<HomeProvider>(
-      builder: (context, homeProvider, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTopSection(homeProvider),
-            const SizedBox(height: 24),
-            _buildWelcomeSection(homeProvider),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTopSection(HomeProvider homeProvider) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [_buildUserSection(homeProvider), _buildNotificationButton()],
-    );
-  }
-
-  Widget _buildUserSection(HomeProvider homeProvider) {
-    return Row(
-      children: [
-        _buildUserAvatar(homeProvider),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hi, ${homeProvider.username.split(' ').first}!',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                homeProvider.role.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWelcomeSection(HomeProvider homeProvider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.today, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat('EEEE, dd MMM').format(DateTime.now()),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  _getGreetingMessage(),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getGreetingMessage() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good morning! Ready to start the day?';
-    } else if (hour < 17) {
-      return 'Good afternoon! Keep up the great work!';
-    } else {
-      return 'Good evening! Almost done for today!';
-    }
-  }
-
-  Widget _buildUserAvatar(HomeProvider homeProvider) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-      ),
-      child: CircleAvatar(
-        radius: 24,
-        backgroundColor: Colors.white.withOpacity(0.2),
-        backgroundImage:
-            homeProvider.imageUrl.isNotEmpty
-                ? NetworkImage(homeProvider.imageUrl)
-                : null,
-        child:
-            homeProvider.imageUrl.isEmpty
-                ? const Icon(Icons.person, color: Colors.white, size: 24)
-                : null,
-      ),
-    );
-  }
-
-  Widget _buildNotificationButton() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: IconButton(
-        icon: Stack(
-          children: [
-            const Icon(
-              Icons.notifications_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
-            Positioned(
-              right: 2,
-              top: 2,
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: AppColors.secondary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-        onPressed: () {
-          final _authProvider = context.read<AuthProvider>();
-          _authProvider.logout();
-        },
-      ),
+      centerTitle: true,
     );
   }
 
@@ -376,11 +162,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             return Row(
               children: [
                 Expanded(child: _buildTabSelector()),
-                const SizedBox(width: 16),
-                if (!(homeProvider.isRoutineSelected &&
-                    homeProvider.role != 'koordinator'))
-                  _buildAddTaskButton(homeProvider),
-              ],
+              ]
             );
           }
         },
@@ -514,60 +296,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddTaskButton(HomeProvider homeProvider) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.secondary, AppColors.secondary.withOpacity(0.8)],
-        ),
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondary.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(25),
-          onTap: () {
-            if (homeProvider.role == 'koordinator' && homeProvider.isRoutineSelected) {
-              Navigator.pushNamed(context, '/add-routine-task');
-            }
-            else{
-              Navigator.pushNamed(context, '/add-report-task');
-            }
-          },
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.add_circle_outline,
-                  color: AppColors.black,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Add Task',
-                  style: TextStyle(
-                    color: AppColors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ),
           ),
         ),
@@ -812,7 +540,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTasksListView(
     List<Map<String, String>> tasks,
     bool isRoutineSelected,
-    String role
+    String role,
   ) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -838,11 +566,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   listen: false,
                 ).setTaskAssignmentId(taskId!);
 
-                if (isRoutineSelected){
-                  Navigator.pushNamed(context, '/routine-task-detail', arguments: task);
-                }
-                else {
-                  Navigator.pushNamed(context, '/report-task-detail', arguments: task);
+                if (isRoutineSelected) {
+                  Navigator.pushNamed(
+                    context,
+                    '/routine-task-detail',
+                    arguments: task,
+                  );
+                } else {
+                  Navigator.pushNamed(
+                    context,
+                    '/report-task-detail',
+                    arguments: task,
+                  );
                 }
               },
             ),

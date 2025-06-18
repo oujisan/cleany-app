@@ -13,6 +13,8 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cleany_app/src/services/task_service.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 
 class EditTaskProvider extends ChangeNotifier {
   String _title = '';
@@ -210,14 +212,21 @@ class EditTaskProvider extends ChangeNotifier {
   }
 
   Future<void> updateTaskStatus(String assignmentId, String status) async {
-    await _taskService.updateStatusReportTask(assignmentId: assignmentId, status: status);
+    await _taskService.updateStatusReportTask(
+      assignmentId: assignmentId,
+      status: status,
+    );
     notifyListeners();
   }
-  
+
   // Method untuk fetch detail task assignment
-  Future<TaskAssignmentModel> fetchTaskAssignmentDetails(String? assignmentId) async {
+  Future<TaskAssignmentModel> fetchTaskAssignmentDetails(
+    String? assignmentId,
+  ) async {
     try {
-      final taskAssignment = await _taskService.fetchTaskAssignmentDetails(assignmentId!);
+      final taskAssignment = await _taskService.fetchTaskAssignmentDetails(
+        assignmentId!,
+      );
       return taskAssignment;
     } catch (e) {
       _error = 'Gagal mengambil detail task: ${e.toString()}';
@@ -263,11 +272,254 @@ class EditTaskProvider extends ChangeNotifier {
   }
 
   // Method untuk set initial data dari task assignment
-  void setInitialDataFromTaskAssignment(String title, String description, String areaId) {
+  void setInitialDataFromTaskAssignment(
+    String title,
+    String description,
+    String areaId,
+  ) {
     _title = title;
     _description = description;
     _selectedAreaId = areaId;
     notifyListeners();
   }
 
+  String _time = '';
+  String _startDate = '';
+  String _endDate = '';
+  List<int> _selectedDays = [];
+  String _timeDisplay = '';
+  String _startDateDisplay = '';
+  String _endDateDisplay = '';
+
+  // Getters untuk routine task
+  String get time => _time;
+  String get startDate => _startDate;
+  String get endDate => _endDate;
+  List<int> get selectedDays => _selectedDays;
+  String get timeDisplay => _timeDisplay;
+  String get startDateDisplay => _startDateDisplay;
+  String get endDateDisplay => _endDateDisplay;
+
+  // Setters untuk routine task
+  void setTime(String time) {
+    _time = time;
+    notifyListeners();
+  }
+
+  void setStartDate(DateTime date) {
+    _startDate = date.toIso8601String();
+    _startDateDisplay = DateFormat('d MMMM yyyy').format(date);
+    notifyListeners();
+  }
+
+  void setEndDate(DateTime date) {
+    _endDate = date.toIso8601String();
+    _endDateDisplay = DateFormat('d MMMM yyyy').format(date);
+    notifyListeners();
+  }
+
+  void setSelectedTime(TimeOfDay time) {
+    final now = DateTime.now();
+    final selectedDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    _time = selectedDateTime.toIso8601String();
+
+    final String hour = time.hour.toString().padLeft(2, '0');
+    final String minute = time.minute.toString().padLeft(2, '0');
+    _timeDisplay = '$hour:$minute';
+
+    notifyListeners();
+  }
+
+  void setSelectedDays(List<int> days) {
+    _selectedDays = days;
+    notifyListeners();
+  }
+
+  void toggleSelectedDay(int day) {
+    if (_selectedDays.contains(day)) {
+      _selectedDays.remove(day);
+    } else {
+      _selectedDays.add(day);
+    }
+    notifyListeners();
+  }
+
+  // Validasi form untuk routine task
+  bool validateRoutineForm() {
+    return _title.trim().isNotEmpty &&
+        _selectedAreaId != null &&
+        _selectedAreaId!.trim().isNotEmpty &&
+        _time.isNotEmpty &&
+        _startDate.isNotEmpty &&
+        _endDate.isNotEmpty &&
+        _selectedDays.isNotEmpty;
+  }
+
+  // Method untuk load routine task details
+  Future<void> loadRoutineTaskDetails(String taskId) async {
+    try {
+      final result = await _taskService.fetchTaskAssignmentDetails(taskId);
+      setTitle(result.task.title);
+      setDescription(result.task.description ?? '');
+      setSelectedAreaId(result.task.area.areaId);
+
+      // Gunakan pengecekan null untuk mengakses data rutin dengan aman
+      final routine = result.task.routine;
+      if (routine != null) {
+        _time = routine.time;
+        _startDate = routine.startDate;
+        _endDate = routine.endDate;
+
+        const dayNameToIndex = {
+          'Monday': 1,
+          'Tuesday': 2,
+          'Wednesday': 3,
+          'Thursday': 4,
+          'Friday': 5,
+          'Saturday': 6,
+          'Sunday': 7,
+        };
+
+        _selectedDays =
+            routine.daysOfWeek
+                .map(
+                  (dayName) => dayNameToIndex[dayName.toLowerCase()],
+                ) // ubah "Monday" -> 1, "Tuesday" -> 2
+                .where(
+                  (dayIndex) => dayIndex != null,
+                ) // Hapus jika ada nama hari yang tidak valid dari API
+                .cast<int>() // Pastikan hasilnya adalah List<int>
+                .toList();
+
+        // Format string untuk tampilan
+        if (routine.time.isNotEmpty) {
+          final timeFromString = DateTime.parse(routine.time);
+          final String hour = timeFromString.hour.toString().padLeft(2, '0');
+          final String minute = timeFromString.minute.toString().padLeft(
+            2,
+            '0',
+          );
+          _timeDisplay = '$hour:$minute';
+        }
+
+        if (routine.startDate.isNotEmpty) {
+          final startDateFromString = DateTime.parse(routine.startDate);
+          _startDateDisplay = DateFormat(
+            'd MMMM yyyy',
+            'id_ID',
+          ).format(startDateFromString);
+        }
+
+        if (routine.endDate.isNotEmpty) {
+          final endDateFromString = DateTime.parse(routine.endDate);
+          _endDateDisplay = DateFormat(
+            'd MMMM yyyy',
+            'id_ID',
+          ).format(endDateFromString);
+        }
+      }
+
+      if (result.task.taskImageUrl != null &&
+          result.task.taskImageUrl!.isNotEmpty) {
+        _taskImageUrls = List<String>.from(result.task.taskImageUrl!);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      _error = 'Gagal memuat detail tugas rutin: $e';
+      notifyListeners();
+    }
+  }
+
+  // Method untuk update routine task
+  Future<bool> updateRoutineTask({
+    required String taskId,
+    required List<String> imageUrlList,
+  }) async {
+    try {
+      final isSuccess = await _taskService.updateRoutineTask(
+        taskId: taskId,
+        title: _title.trim(),
+        description: _description.trim(),
+        imageUrlList: imageUrlList,
+        areaId: _selectedAreaId!,
+        time: _time,
+        startDate: _startDate,
+        endDate: _endDate,
+        days: _selectedDays,
+      );
+
+      _message = _taskService.getMessage;
+      notifyListeners();
+      return isSuccess;
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Method untuk set initial data routine task
+  void setInitialRoutineDataFromTask({
+    required String title,
+    required String description,
+    required String areaId,
+    required String time,
+    required String startDate,
+    required String endDate,
+    required List<int> days,
+    required List<String> imageUrls,
+  }) {
+    _title = title;
+    _description = description;
+    _selectedAreaId = areaId;
+    _time = time;
+    _startDate = startDate;
+    _endDate = endDate;
+    _selectedDays = days;
+    _taskImageUrls = imageUrls;
+
+    // Format display strings
+    if (time.isNotEmpty) {
+      final timeFromString = DateTime.parse(time);
+      _timeDisplay =
+          '${timeFromString.hour.toString().padLeft(2, '0')}:${timeFromString.minute.toString().padLeft(2, '0')}';
+    }
+
+    if (startDate.isNotEmpty) {
+      final startDateFromString = DateTime.parse(startDate);
+      _startDateDisplay = DateFormat('d MMMM yyyy').format(startDateFromString);
+    }
+
+    if (endDate.isNotEmpty) {
+      final endDateFromString = DateTime.parse(endDate);
+      _endDateDisplay = DateFormat('d MMMM yyyy').format(endDateFromString);
+    }
+
+    notifyListeners();
+  }
+
+  // Method untuk clear routine form
+  void clearRoutineForm({bool silent = false}) {
+    _title = '';
+    _description = '';
+    _selectedAreaId = null;
+    _taskImageUrls.clear();
+    _time = '';
+    _startDate = '';
+    _endDate = '';
+    _selectedDays.clear();
+    _timeDisplay = '';
+    _startDateDisplay = '';
+    _endDateDisplay = '';
+    _error = '';
+    _message = '';
+    if (!silent) notifyListeners();
+  }
 }

@@ -11,6 +11,7 @@ class TaskCardWidget extends StatelessWidget {
   final String? taskType;
   final VoidCallback? onTap;
   final bool verif;
+  final String role;
 
   const TaskCardWidget({
     super.key,
@@ -18,6 +19,7 @@ class TaskCardWidget extends StatelessWidget {
     required this.status,
     required this.areaName,
     required this.areaBuilding,
+    required this.role,
     this.createdBy,
     this.time,
     this.taskType,
@@ -134,6 +136,8 @@ class TaskCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     // Status Badge
+                    
+                  if (role == 'cleaner' || role == 'user')
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,

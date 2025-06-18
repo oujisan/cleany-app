@@ -11,7 +11,6 @@ class LoginScreen extends StatelessWidget {
     AuthProvider authProvider,
   ) async {
     final isSuccess = await authProvider.login();
-    // final isSuccess = 1 == 1;
 
     if (!context.mounted) return;
     if (isSuccess) {
@@ -31,21 +30,20 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         toolbarHeight: 200,
         automaticallyImplyLeading: false,
         flexibleSpace: SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Image.asset('assets/images/logo.png', width: 50, height: 50),
-
                 const SizedBox(height: 16),
-
-                Text(
+                const Text(
                   'Welcome Back',
                   style: TextStyle(
                     color: AppColors.white,
@@ -53,10 +51,8 @@ class LoginScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
-                Text(
+                const Text(
                   'Login to your account',
                   style: TextStyle(
                     color: AppColors.white,
@@ -70,178 +66,177 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                return Column(
-                  children: [
-                    const SizedBox(height: 8),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
 
-                    // Email Textfield
-                    Focus(
-                      onFocusChange: (hasFocus) {
-                        if (!hasFocus) {
-                          authProvider.setEmailTouched();
-                        }
-                      },
-                      child: TextField(
-                        onChanged: authProvider.setEmail,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Email',
-                          errorText:
-                              authProvider.isEmailTouched
-                                  ? authProvider.email.isEmpty
-                                      ? "Email cannot be empty"
-                                      : authProvider.email.trim().isEmpty
-                                      ? "Email cannot be whitespace only"
-                                      : !authProvider.isEmailValid
-                                      ? "Invalid Email"
-                                      : null
-                                  : null,
+                  // Email Textfield
+                  Focus(
+                    onFocusChange: (hasFocus) {
+                      if (!hasFocus) {
+                        authProvider.setEmailTouched();
+                      }
+                    },
+                    child: TextField(
+                      onChanged: authProvider.setEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: 'Email',
+                        errorText: authProvider.isEmailTouched
+                            ? authProvider.email.isEmpty
+                                ? "Email cannot be empty"
+                                : authProvider.email.trim().isEmpty
+                                    ? "Email cannot be whitespace only"
+                                    : !authProvider.isEmailValid
+                                        ? "Invalid Email"
+                                        : null
+                            : null,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Password Textfield
+                  Focus(
+                    onFocusChange: (hasFocus) {
+                      if (!hasFocus) {
+                        authProvider.setPasswordTouched();
+                      }
+                    },
+                    child: TextField(
+                      onChanged: authProvider.setPassword,
+                      obscureText: !authProvider.isPasswordVisible,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: 'Password',
+                        errorText: authProvider.isPasswordTouched
+                            ? authProvider.password.isEmpty
+                                ? "Password cannot be empty"
+                                : authProvider.password.trim().isEmpty
+                                    ? "Password cannot be whitespace only"
+                                    : null
+                            : null,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            authProvider.isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: authProvider.togglePasswordVisibility,
+                          color: AppColors.grey,
                         ),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 32),
+                  const SizedBox(height: 4),
 
-                    // Password Textfield
-                    Focus(
-                      onFocusChange: (hasFocus) {
-                        if (!hasFocus) {
-                          authProvider.setPasswordTouched();
-                        }
-                      },
-                      child: TextField(
-                        onChanged: authProvider.setPassword,
-                        obscureText: !authProvider.isPasswordVisible,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Password',
-                          errorText:
-                              authProvider.isPasswordTouched
-                                  ? authProvider.password.isEmpty
-                                      ? "Password cannot be empty"
-                                      : authProvider.password.trim().isEmpty
-                                      ? "Password cannot be whitespace only"
-                                      : null
-                                  : null,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              authProvider.isPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: authProvider.togglePasswordVisibility,
-                            color: AppColors.grey,
+                  // Forgot Password Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.only(right: 4),
+                        ),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/forgot-password');
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
 
-                    const SizedBox(height: 4),
+                  const SizedBox(height: 32),
 
-                    // Forgot Password Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.only(right: 4),
-                          ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/forgot-password');
-                          },
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Login Button
-                    GestureDetector(
-                      onTap: () {
-                        if (authProvider.isEmailValid &&
-                            authProvider.password.trim().isNotEmpty) {
-                          authProvider.isLoading
-                              ? null
-                              : authProvider.toggleLoginButton();
+                  // Login Button
+                  GestureDetector(
+                    onTap: () {
+                      if (authProvider.isEmailValid &&
+                          authProvider.password.trim().isNotEmpty) {
+                        if (!authProvider.isLoading) {
+                          authProvider.toggleLoginButton();
                           _handleLogin(context, authProvider);
-                        } else {
-                          null;
                         }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color:
-                              authProvider.isEmailValid &&
-                                      authProvider.password.trim().isNotEmpty &&
-                                      !authProvider.isLoading
-                                  ? AppColors.primary
-                                  : AppColors.grey,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child:
-                              authProvider.isLoading
-                                  ? const CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.white,
-                                    ),
-                                  )
-                                  : const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      color: AppColors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                        ),
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: authProvider.isEmailValid &&
+                                authProvider.password.trim().isNotEmpty &&
+                                !authProvider.isLoading
+                            ? AppColors.primary
+                            : AppColors.grey,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: authProvider.isLoading
+                            ? const CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(AppColors.white),
+                              )
+                            : const Text(
+                                'Login',
+                                style: TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                     ),
+                  ),
 
-                    // Register button + text
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Don\'t have an account?',
-                          style: TextStyle(color: AppColors.grey, fontSize: 14),
-                        ),
-                        TextButton(
-                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/register',
-                            );
-                          },
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 14,
-                            ),
+                  const SizedBox(height: 16),
+
+                  // Register button + text
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Don\'t have an account?',
+                        style: TextStyle(color: AppColors.grey, fontSize: 14),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/register',
+                          );
+                        },
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 14,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

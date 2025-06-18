@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:cleany_app/src/services/area_service.dart';
@@ -12,6 +11,8 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cleany_app/src/services/task_service.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 
 class TaskProvider extends ChangeNotifier {
   String _title = '';
@@ -23,6 +24,10 @@ class TaskProvider extends ChangeNotifier {
   String _error = '';
   String _message = '';
   List<String> _taskImageUrls = [];
+  String _selectedTime = '';
+  String _startDate = '';
+  String _endDate = '';
+  List<int> _selectedDays = [];
 
   final AreaService _areaService = AreaService();
   final TaskService _taskService = TaskService();
@@ -37,6 +42,10 @@ class TaskProvider extends ChangeNotifier {
   String get getError => _error;
   String get getMessage => _message;
   List<String> get taskImageUrls => _taskImageUrls;
+  String get selectedTime => _selectedTime;
+  String get startDate => _startDate;
+  String get endDate => _endDate;
+  List<int> get daysOfWeek => _selectedDays;
 
   // Initialization
   Future<void> initializeData() async {
@@ -175,6 +184,32 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> submitRuutineTask() async {
+    try {
+      final areaId = int.tryParse(_selectedAreaId ?? '');
+      if (areaId == null) {
+        _error = 'Area tidak valid';
+        notifyListeners();
+        return false;
+      }
+
+      final isSuccess = await _taskService.addReportTask(
+        title: _title.trim(),
+        description: _description.trim(),
+        imageUrlList: _taskImageUrls,
+        areaId: areaId,
+      );
+
+      _message = _taskService.getMessage;
+      notifyListeners();
+      return isSuccess;
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearForm({bool silent = false}) {
     _title = '';
     _description = '';
@@ -182,12 +217,130 @@ class TaskProvider extends ChangeNotifier {
     _taskImageUrls.clear();
     _error = '';
     _message = '';
+    _selectedStartDate = null;
+    _selectedEndDate = null;
+    _selectedTimeOfDay = null;
+    _selectedDays.clear();
     if (!silent) notifyListeners();
   }
 
   Future<void> updateTaskStatus(String assignmentId, String status) async {
-    await _taskService.updateStatusReportTask(assignmentId: assignmentId, status: status);
+    await _taskService.updateStatusReportTask(
+      assignmentId: assignmentId,
+      status: status,
+    );
     notifyListeners();
   }
-  
+
+  Future<void> addRoutineTask() async {
+    await _taskService.addRoutineTask(
+      title: _title.trim(),
+      description: _description.trim(),
+      areaId: _selectedAreaId ?? '',
+      time: _selectedTime,
+      imageUrlList: _taskImageUrls,
+      startDate: _startDate,
+      endDate: _endDate,
+      days: _selectedDays,
+    );
+    notifyListeners();
+  }
+
+  // GEMINI
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
+  TimeOfDay? _selectedTimeOfDay; // 1=Senin, 2=Selasa, ..., 7=Minggu
+
+  // --- TAMBAHAN: Getters untuk menampilkan di UI ---
+  String get startDateDisplay =>
+      _selectedStartDate != null
+          ? DateFormat('d MMMM yyyy').format(_selectedStartDate!)
+          : '';
+  String get endDateDisplay =>
+      _selectedEndDate != null
+          ? DateFormat('d MMMM yyyy').format(_selectedEndDate!)
+          : '';
+  String get timeDisplay {
+    if (_selectedTimeOfDay == null) return '';
+    final hour = _selectedTimeOfDay!.hour.toString().padLeft(2, '0');
+    final minute = _selectedTimeOfDay!.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  List<int> get selectedDays => _selectedDays;
+
+  void setStartDate(DateTime date) {
+    _selectedStartDate = date;
+    // Jika tanggal akhir lebih awal dari tanggal mulai baru, reset tanggal akhir
+    if (_selectedEndDate != null && _selectedEndDate!.isBefore(date)) {
+      _selectedEndDate = null;
+    }
+    notifyListeners();
+  }
+
+  void setEndDate(DateTime date) {
+    _selectedEndDate = date;
+    notifyListeners();
+  }
+
+  void setSelectedTime(TimeOfDay time) {
+    _selectedTimeOfDay = time;
+    notifyListeners();
+  }
+
+  void toggleSelectedDay(int day) {
+    if (_selectedDays.contains(day)) {
+      _selectedDays.remove(day);
+    } else {
+      _selectedDays.add(day);
+      _selectedDays.sort(); // Jaga agar urutan tetap
+    }
+    notifyListeners();
+  }
+
+  bool validateRoutineForm() {
+    if (title.isEmpty ||
+        selectedAreaId == null ||
+        selectedAreaId!.isEmpty ||
+        _selectedStartDate == null ||
+        _selectedEndDate == null ||
+        _selectedTimeOfDay == null ||
+        _selectedDays.isEmpty) {
+      return false;
+    }
+    return true;
+  }
+  Future<bool> submitRoutineTask() async {
+    if (!validateRoutineForm()) {
+      // Validasi tambahan bisa dilakukan di sini atau di UI
+      return false;
+    }
+
+    // Format data untuk dikirim ke service
+    final String formattedStartDate = DateFormat(
+      'yyyy-MM-dd',
+    ).format(_selectedStartDate!);
+    final String formattedEndDate = DateFormat(
+      'yyyy-MM-dd',
+    ).format(_selectedEndDate!);
+    final String formattedTime =
+        '${_selectedTimeOfDay!.hour.toString().padLeft(2, '0')}:${_selectedTimeOfDay!.minute.toString().padLeft(2, '0')}';
+
+    final success = await _taskService.addRoutineTask(
+      title: title,
+      description: description,
+      areaId: selectedAreaId!,
+      time: formattedTime,
+      imageUrlList: taskImageUrls.isNotEmpty ? taskImageUrls : null,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      days: _selectedDays,
+    );
+
+    // Asumsi _taskService akan mengembalikan true/false
+    // dan mengatur message/error secara internal.
+    return success;
+  }
 }

@@ -12,7 +12,7 @@ class AppConstants {
   static String apiResetPasswordUrl = "${AppConstants.baseUrl}/api/auth/reset-password";
 
   // Task API Endpoints
-  static String apiFetchRoutineTasksUrl = "${AppConstants.baseUrl}/api/task/assignment/routine/";
+  static String apiFetchRoutineTasksUrl = "${AppConstants.baseUrl}/api/task/assignment/routine";
   static String apiFetchUserReportTasksUrl(String userId) => "${AppConstants.baseUrl}/api/task/assignment/report/user/$userId";
   static String apiFetchTaskAssignmentByIdUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/$assignmentId";
   static String apiAddReportTaskUrl = "${AppConstants.baseUrl}/api/task/report/add";
@@ -37,6 +37,8 @@ class AppConstants {
   // Verification API Endpoints
   static String apiFetchVerificationUrl(String taskId) => "${AppConstants.baseUrl}/api/verification/task/$taskId";
   static String apiFetchVerificationByIdUrl(String verificationId) => "${AppConstants.baseUrl}/api/verification/$verificationId";
+
+  static String apiFetchProfileUserUrl = "${AppConstants.baseUrl}/api/userProfile";
 
   // Area API Endpoints
   static String apiFetchAreaUrl = "${AppConstants.baseUrl}/api/area";
