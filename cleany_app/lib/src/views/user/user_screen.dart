@@ -43,20 +43,16 @@ class _UserProfileViewState extends State<UserProfileView> {
                 child: CircularProgressIndicator(color: AppColors.primary),
               );
             case ViewState.error:
-              // _buildErrorWidget bisa tetap sama
               return _buildErrorWidget(context, provider.errorMessage);
             case ViewState.loaded:
-              // JIKA DATA KOSONG
               if (provider.userProfiles.isEmpty) {
                 return const Center(child: Text("No users found."));
               }
-              // UBAH BAGIAN INI UNTUK MENAMPILKAN LIST
               return ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 itemCount: provider.userProfiles.length,
                 itemBuilder: (context, index) {
                   final user = provider.userProfiles[index];
-                  // Gunakan widget card yang sudah dibuat sebelumnya
                   return _buildUserProfileCard(context, user);
                 },
               );
