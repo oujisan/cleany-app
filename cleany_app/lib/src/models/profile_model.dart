@@ -33,13 +33,14 @@ class ProfileModel {
   factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
     firstName: json['firstName'] ?? '',
     lastName: json['lastName'],
-    username: json['userName'] ?? '',
+    username: json['username'] ?? '', 
     email: json['email'] ?? '',
     password: json['password'] ?? '',
     imageUrl: json['imageUrl'],
     role: json['role'] ?? '',
-    shift: json['shift']
+    shift: json['shift'],
   );
+
 
   static ProfileModel empty() => ProfileModel(
     firstName: '',

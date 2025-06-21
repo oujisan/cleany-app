@@ -22,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _initializeData() async {
     final profileProvider = context.read<ProfileProvider>();
-    await profileProvider.initializeProfile(); // Changed from loadUserProfile
+    await profileProvider.initializeProfile();
   }
 
   @override
@@ -41,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 240,
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primary,
@@ -73,7 +73,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (snapshot.hasError) {
                     return _buildErrorState();
                   }
-                  return _buildHeaderContent();
+                  return SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: _buildHeaderContent(),
+                  );
                 },
               ),
             ),
@@ -101,12 +104,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildHeaderContent() {
     return Consumer<ProfileProvider>(
       builder: (context, profileProvider, _) {
-        // Show loading state if still loading
         if (profileProvider.isLoadingProfile) {
           return _buildLoadingState();
         }
 
-        // Show error state if there's an error
         if (profileProvider.profileError != null) {
           return Center(
             child: Column(
@@ -134,26 +135,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         return Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildProfileAvatar(profileProvider),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
-              '${profileProvider.profile.firstName} ${profileProvider.profile.lastName ?? ''}', // Fixed
+              '${profileProvider.profile.firstName} ${profileProvider.profile.lastName ?? ''}',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
-              '@${profileProvider.profile.username}', // Fixed
+              '@${profileProvider.profile.username}',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         );
@@ -177,10 +181,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: CircleAvatar(
         radius: 40,
         backgroundColor: Colors.white.withOpacity(0.2),
-        backgroundImage: profileProvider.profile.imageUrl != null && profileProvider.profile.imageUrl!.isNotEmpty // Fixed
+        backgroundImage: profileProvider.profile.imageUrl != null && profileProvider.profile.imageUrl!.isNotEmpty
             ? NetworkImage(profileProvider.profile.imageUrl!)
             : null,
-        child: profileProvider.profile.imageUrl == null || profileProvider.profile.imageUrl!.isEmpty // Fixed
+        child: profileProvider.profile.imageUrl == null || profileProvider.profile.imageUrl!.isEmpty
             ? const Icon(Icons.person, color: Colors.white, size: 40)
             : null,
       ),
@@ -195,7 +199,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(24),
           child: Consumer<ProfileProvider>(
             builder: (context, profileProvider, _) {
-              // Show loading indicator in content area if needed
               if (profileProvider.isLoadingProfile && !profileProvider.hasProfile) {
                 return const Center(
                   child: Padding(
@@ -288,62 +291,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            _buildInfoItem(
-              icon: Icons.person_outline,
-              label: 'First Name',
-              value: profileProvider.profile.firstName, // Fixed
-            ),
+            _buildInfoItem(icon: Icons.person_outline, label: 'First Name', value: profileProvider.profile.firstName),
             _buildDivider(),
-            _buildInfoItem(
-              icon: Icons.person_outline,
-              label: 'Last Name',
-              value: profileProvider.profile.lastName ?? '-', // Fixed - handle nullable
-            ),
+            _buildInfoItem(icon: Icons.person_outline, label: 'Last Name', value: profileProvider.profile.lastName ?? '-'),
             _buildDivider(),
-            _buildInfoItem(
-              icon: Icons.alternate_email,
-              label: 'Username',
-              value: profileProvider.profile.username, // Fixed
-            ),
+            _buildInfoItem(icon: Icons.alternate_email, label: 'Username', value: profileProvider.profile.username),
             _buildDivider(),
-            _buildInfoItem(
-              icon: Icons.email_outlined,
-              label: 'Email',
-              value: profileProvider.profile.email, // Fixed
-            ),
+            _buildInfoItem(icon: Icons.email_outlined, label: 'Email', value: profileProvider.profile.email),
             _buildDivider(),
-            _buildInfoItem(
-              icon: Icons.work_outline,
-              label: 'Role',
-              value: profileProvider.profile.role, // Added role field
-            ),
+            _buildInfoItem(icon: Icons.work_outline, label: 'Role', value: profileProvider.profile.role),
             if (profileProvider.profile.shift != null) ...[
               _buildDivider(),
-              _buildInfoItem(
-                icon: Icons.schedule_outlined,
-                label: 'Shift',
-                value: profileProvider.profile.shift!, // Added shift field
-              ),
+              _buildInfoItem(icon: Icons.schedule_outlined, label: 'Shift', value: profileProvider.profile.shift!),
             ],
             _buildDivider(),
-            _buildInfoItem(
-              icon: Icons.lock_outline,
-              label: 'Password',
-              value: '••••••••',
-              isPassword: true,
-            ),
+            _buildInfoItem(icon: Icons.lock_outline, label: 'Password', value: '••••••••', isPassword: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    bool isPassword = false,
-  }) {
+  Widget _buildInfoItem({required IconData icon, required String label, required String value, bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -354,11 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -376,26 +341,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value.isEmpty ? '-' : value, // Handle empty values
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  value.isEmpty ? '-' : value,
+                  style: const TextStyle(fontSize: 16, color: AppColors.black, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
           ),
           if (isPassword)
             IconButton(
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: AppColors.grey,
-                size: 20,
-              ),
-              onPressed: () {
-                _showChangePasswordDialog();
-              },
+              icon: const Icon(Icons.edit_outlined, color: AppColors.grey, size: 20),
+              onPressed: _showChangePasswordDialog,
             ),
         ],
       ),
@@ -403,11 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildDivider() {
-    return Divider(
-      color: AppColors.grey.withOpacity(0.2),
-      thickness: 1,
-      height: 1,
-    );
+    return Divider(color: AppColors.grey.withOpacity(0.2), thickness: 1, height: 1);
   }
 
   Widget _buildActionButtons() {
@@ -418,9 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Edit Profile',
           subtitle: 'Update your personal information',
           color: AppColors.secondary,
-          onTap: () {
-            Navigator.pushNamed(context, '/edit-profile');
-          },
+          onTap: () => Navigator.pushNamed(context, '/edit-profile'),
         ),
         const SizedBox(height: 16),
         _buildActionButton(
@@ -428,9 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Change Password',
           subtitle: 'Update your account password',
           color: AppColors.primary,
-          onTap: () {
-            _showChangePasswordDialog();
-          },
+          onTap: _showChangePasswordDialog,
         ),
         const SizedBox(height: 16),
         _buildActionButton(
@@ -441,13 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () async {
             final profileProvider = context.read<ProfileProvider>();
             await profileProvider.refreshProfile();
-            
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Profile refreshed successfully'),
-                  backgroundColor: AppColors.success,
-                ),
+                SnackBar(content: const Text('Profile refreshed successfully'), backgroundColor: AppColors.success),
               );
             }
           },
@@ -458,33 +401,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Logout',
           subtitle: 'Sign out from your account',
           color: AppColors.error,
-          onTap: () {
-            _showLogoutDialog();
-          },
+          onTap: _showLogoutDialog,
         ),
       ],
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildActionButton({required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -497,46 +426,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 20,
-                  ),
+                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  child: Icon(icon, color: color, size: 20),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                        ),
-                      ),
+                      Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
                       const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.grey.withOpacity(0.8),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
+                      Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.grey.withOpacity(0.8), fontWeight: FontWeight.w400)),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.grey.withOpacity(0.6),
-                  size: 16,
-                ),
+                Icon(Icons.arrow_forward_ios, color: AppColors.grey.withOpacity(0.6), size: 16),
               ],
             ),
           ),
@@ -550,32 +454,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Change Password',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.black,
-            ),
-          ),
-          content: const Text(
-            'This feature will redirect you to change password page.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.grey,
-            ),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Change Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
+          content: const Text('This feature will redirect you to change password page.', style: TextStyle(fontSize: 14, color: AppColors.grey)),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.grey),
-              ),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppColors.grey))),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -584,9 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Continue'),
             ),
@@ -601,25 +482,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Logout',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.black,
-            ),
-          ),
-          content: const Text(
-            'Are you sure you want to logout from your account?',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.grey,
-            ),
-          ),
-          actions: [
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+title: const Text('Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
+content: const Text(
+  'Are you sure you want to logout from your account?',
+  style: TextStyle(
+    fontSize: 14,
+    color: AppColors.grey,
+  ),
+),
+actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(
@@ -653,6 +525,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBottomSpacing() {
-    return const SliverToBoxAdapter(child: SizedBox(height: 120));
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: MediaQuery.of(context).padding.bottom + 40, 
+      ),
+    );
   }
 }
+
