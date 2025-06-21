@@ -10,6 +10,8 @@ class TaskAssignmentModel {
   final String createdAt;
   final String? assignmentAt;
   final String? completeAt;
+  final String? latitude;
+  final String? longitude;
 
   TaskAssignmentModel({
     required this.assignmentId,
@@ -21,6 +23,8 @@ class TaskAssignmentModel {
     required this.createdAt,
     this.assignmentAt,
     this.completeAt,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toJson() => {
@@ -33,6 +37,8 @@ class TaskAssignmentModel {
     'createdAt': createdAt,
     'assignmentAt': assignmentAt,
     'completeAt': completeAt,
+    'latitude': latitude,
+    'longitude': longitude
   };
 
   factory TaskAssignmentModel.fromJson(Map<String, dynamic> json) =>
@@ -49,6 +55,8 @@ class TaskAssignmentModel {
         createdAt: json['createdAt'],
         assignmentAt: json['assignmentAt'],
         completeAt: json['completeAt'],
+        latitude: json['latitude'],
+        longitude: json['longitude'],
       );
 
   static TaskAssignmentModel empty() => TaskAssignmentModel(
@@ -61,10 +69,12 @@ class TaskAssignmentModel {
     createdAt: '',
     assignmentAt: '',
     completeAt: '',
+    latitude: '',
+    longitude: '',
   );
 
   @override
   String toString() {
-    return 'TaskAssignmentModel(assignmentId: $assignmentId, task: $task, date: $date, status: $status, workedBy: $workedBy, proofImageUrl: $proofImageUrl, createdAt: $createdAt, assignmentAt: $assignmentAt, completeAt: $completeAt)';
+    return 'TaskAssignmentModel(assignmentId: $assignmentId, task: $task, date: $date, status: $status, workedBy: $workedBy, proofImageUrl: $proofImageUrl, createdAt: $createdAt, assignmentAt: $assignmentAt, completeAt: $completeAt, latitude: $latitude, longitude: $longitude)';
   }
 }

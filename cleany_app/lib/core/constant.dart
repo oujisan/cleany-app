@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  static String baseUrl = dotenv.env['API_LOCAL_URL']!;
-  // static String baseUrl = dotenv.env['API_AZURE_URL']!;
+  // static String baseUrl = dotenv.env['API_LOCAL_URL']!;
+  static String baseUrl = dotenv.env['API_AZURE_URL']!;
 
   // Auth API Endpoints
   static String apiLoginUrl = "${AppConstants.baseUrl}/api/auth/login";
@@ -22,6 +22,7 @@ class AppConstants {
   static String apiDeleteTaskUrl(String taskId) => "${AppConstants.baseUrl}/api/task/delete/$taskId";
 
   static String apiFetchTaskReportUrl() => "${AppConstants.baseUrl}/api/task/assignment/report";
+  static String apiUpdateLocationAssignmentUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/update/location/$assignmentId";
 
   static String apiUpdateStatusTaskAssignmentUrl(String assignmentId) => "${AppConstants.baseUrl}/api/task/assignment/update/status/$assignmentId";
   static String apiFetchVerificationByAssignmentIdUrl(String assignmentId) => "${AppConstants.baseUrl}/api/verification/assignment/$assignmentId";

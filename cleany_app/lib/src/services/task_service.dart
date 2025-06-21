@@ -560,6 +560,46 @@ class TaskService {
     }
   }
 
+  Future<bool> updateLocationTask({
+    required String assignmentId,
+    required String latitude,
+    required String longitude,
+  }) async {
+    final url = Uri.parse(AppConstants.apiUpdateLocationAssignmentUrl(assignmentId));
+
+    try {
+      final requestBody = {
+        'latitude': latitude,
+        'longitude': longitude,
+      };
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization':
+              'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
+        },
+        body: json.encode(requestBody),
+      );
+
+      final apiResponse = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        _message = apiResponse['message'] ?? 'Task berhasil diperbarui';
+        return true;
+      } else {
+        _message = apiResponse['message'] ?? 'Gagal memperbarui task';
+        _error = apiResponse['error'] ?? 'Unknown error';
+        return false;
+      }
+    } catch (e) {
+      _message = 'Exception occurred';
+      _error = e.toString();
+      return false;
+    }
+  }
+
   String get getMessage => _message;
   String get getError => _error;
 }

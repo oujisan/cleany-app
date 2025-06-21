@@ -4,6 +4,7 @@ import 'package:cleany_app/src/models/verification_model.dart';
 import 'package:cleany_app/src/services/task_service.dart';
 import 'package:cleany_app/core/secure_storage.dart';
 import 'package:cleany_app/core/constant.dart';
+import 'package:geolocator/geolocator.dart';
 
 class TaskDetailProvider extends ChangeNotifier {
   final TaskService _taskService = TaskService();
@@ -17,6 +18,8 @@ class TaskDetailProvider extends ChangeNotifier {
   String _createdBy = '';
   String _username = '';
   String _taskId = '';
+  String _latitude = '';
+  String _logitude = '';
 
   // Getters
   String? get taskAssignmentId => _taskAssignmentId;
@@ -28,6 +31,8 @@ class TaskDetailProvider extends ChangeNotifier {
   String get createdBy => _createdBy;
   String get username => _username;
   String get taskId => _taskId;
+  String get latitude => _latitude;
+  String get logitude => _logitude;
 
   // Set task assignment ID
   void setTaskAssignmentId(String id) {
@@ -155,5 +160,47 @@ class TaskDetailProvider extends ChangeNotifier {
       _error = 'Gagal menghapus tugas: $e';
     }
     return false;
+  }
+
+  Future<bool> getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return false;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return false;
+    }
+
+    final LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+    );
+
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    );
+
+    _latitude = position.latitude.toString();
+    _logitude = position.longitude.toString();
+
+    await _taskService.updateLocationTask(
+      assignmentId: _taskAssignmentId!,
+      latitude: _latitude,
+      longitude: _logitude,
+    );
+
+    notifyListeners();
+    return true;
   }
 }

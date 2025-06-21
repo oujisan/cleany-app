@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter/foundation.dart';
 
 import 'src/views/splash_screen.dart';
 import 'src/views/auth/login_screen.dart';
@@ -30,11 +32,13 @@ import 'package:cleany_app/src/providers/user_profile_provider.dart';
 import 'package:cleany_app/src/providers/profile_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id', null);
   await dotenv.load(fileName: ".env");
 
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: false,
+      // enabled: !kReleaseMode,
       builder: (context) => const MainApp(),
     ),
   );

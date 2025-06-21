@@ -23,6 +23,7 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
   late String _usernameUser = '';
   List<File> _localImages = [];
   List<String> _proofImageUrls = [];
+  bool _isGetLocation = false;
 
   @override
   void initState() {
@@ -617,27 +618,36 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
 
     if (result) {
       if (!context.mounted) return;
-      _showSnackBar('Tugas Diterima! Segera selesaikan tugas.');
+      _showSnackBar('Status tugas telah diperbaharui');
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       if (!context.mounted) return;
-      _showSnackBar('Gagal menerima tugas. Silakan coba lagi.', isError: true);
+      _showSnackBar('Gagal memperbarui status tugas', isError: true);
     }
   }
 
   Future<void> _handleDeleteTask(
     TaskDetailProvider provider,
-    String taskId
+    String taskId,
   ) async {
     final success = await provider.deleteTask(taskId);
-      if (success) {
-        _showSnackBar('Laporan berhasil dihapus!');
-      } else {
-        _showSnackBar(
-          'Gagal menghapus laporan. Silakan coba lagi.',
-          isError: true,
-        );
-      }
+    if (success) {
+      _showSnackBar('Laporan berhasil dihapus!');
+    } else {
+      _showSnackBar(
+        'Gagal menghapus laporan. Silakan coba lagi.',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _handleGetLocation(TaskDetailProvider taskDetailProvider) async {
+    final location = await taskDetailProvider.getCurrentLocation();
+    if (location) {
+      _isGetLocation = true;
+    } else {
+      _showSnackBar('Gagal mendapatkan lokasi.', isError: true);
+    }
   }
 
   Future<void> _handleProofImageUpload(
@@ -664,12 +674,12 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
     final success = await taskDetailProvider.updateVerificationStatus(status);
     if (success) {
       if (!context.mounted) return;
-      _showSnackBar('Verifikasi tugas berhasil!');
+      _showSnackBar('Tugas berhasil diverifikasi');
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       if (!context.mounted) return;
       _showSnackBar(
-        'Gagal memperbarui verifikasi tugas. Silakan coba lagi.',
+        'Gagal memverifikasi tugas. Silakan coba lagi.',
         isError: true,
       );
     }
@@ -691,17 +701,21 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
         actions: [
           Consumer<TaskDetailProvider>(
             builder: (context, provider, _) {
-              if (provider.task?.status == 'pending' && _usernameUser == provider.createdBy) {
+              if (provider.task?.status == 'pending' &&
+                  _usernameUser == provider.createdBy) {
                 return Row(
                   children: [
                     IconButton(
                       onPressed: () {
-                      Navigator.push(
-                        context, 
-                        MaterialPageRoute(
-                          builder: (context) => EditReportTaskScreen(assignmentId: provider.taskAssignmentId,),
-                        )
-                      );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => EditReportTaskScreen(
+                                  assignmentId: provider.taskAssignmentId,
+                                ),
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.edit_rounded),
                     ),
@@ -732,11 +746,15 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      
-                                      _handleDeleteTask(provider, provider.taskId);
-                                      Navigator.pushReplacementNamed(context, '/home');
-                                    }
-                                    ,
+                                      _handleDeleteTask(
+                                        provider,
+                                        provider.taskId,
+                                      );
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        '/home',
+                                      );
+                                    },
                                     child: const Text(
                                       'Hapus',
                                       style: TextStyle(
@@ -857,7 +875,9 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          verif != null && asn.status == 'completed' ? _buildStatusChip(verif.status!, verif: true) : _buildStatusChip(asn.status),
+                          verif != null && asn.status == 'completed'
+                              ? _buildStatusChip(verif.status!, verif: true)
+                              : _buildStatusChip(asn.status),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -1084,11 +1104,24 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                 // Proof Images
                 if (asn.status == 'completed' &&
                     asn.proofImageUrl != null &&
-                    asn.proofImageUrl!.isNotEmpty)
+                    asn.proofImageUrl!.isNotEmpty) ...[
                   _buildImageGrid(
                     title: 'Foto Bukti Pengerjaan',
                     imageUrls: asn.proofImageUrl!,
                   ),
+                  if (_roleUser == 'cleaner') ...[
+                    _buildDetailCard(
+                      label: 'latitude',
+                      value: asn.latitude ?? '-',
+                      icon: Icons.location_searching_rounded,
+                    ),
+                    _buildDetailCard(
+                      label: 'longitude',
+                      value: asn.longitude ?? '-',
+                      icon: Icons.my_location,
+                    ),
+                  ],
+                ],
 
                 // Action Button for Cleaner
                 if (_roleUser == 'cleaner' &&
@@ -1118,7 +1151,8 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                                   );
                                 } else if (asn.status == 'in_progress') {
                                   newStatus = 'completed';
-                                  if (_localImages.isNotEmpty) {
+                                  _handleGetLocation(provider);
+                                  if (_localImages.isNotEmpty && _isGetLocation) {
                                     _handleUpdateStatus(
                                       context,
                                       provider,
@@ -1253,7 +1287,8 @@ class _ReportTaskDetailScreenState extends State<ReportTaskDetailScreen> {
                           ),
                         ],
 
-                        if (_roleUser == 'koordinator' && verif!.status == 'pending') ...[
+                        if (_roleUser == 'koordinator' &&
+                            verif!.status == 'pending') ...[
                           const SizedBox(height: 20),
                           Row(
                             children: [
