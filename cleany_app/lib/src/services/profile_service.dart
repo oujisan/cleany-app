@@ -20,7 +20,7 @@ class ProfileService {
         'authorization': 'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
       },
     );
-  
+
     final apiResponse = json.decode(response.body);
 
     if (response.statusCode == 200 && apiResponse['data'] != null) {
@@ -37,8 +37,8 @@ class ProfileService {
   }
 }
 
-  Future<ProfileModel> updateUserProfile(ProfileModel profile) async {
-    final url = Uri.parse(AppConstants.updateUserProfileUrl(profile.username));
+  Future<bool> updateUserProfile(String userId, Map<String, dynamic> data) async {
+    final url = Uri.parse(AppConstants.updateUserProfileUrl(userId));
     try {
       final response = await http.put(
         url,
@@ -46,22 +46,22 @@ class ProfileService {
           'Content-Type': 'application/json',
           'authorization': 'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
         },
-        body: json.encode(profile.toJson()),
+        body: json.encode(data),
       );
-  
+
       final apiResponse = json.decode(response.body);
-  
-      if (response.statusCode == 200 && apiResponse['data'] != null) {
-        return ProfileModel.fromJson(apiResponse['data']);
+
+      if (response.statusCode == 200) {
+        return true;
       } else {
         _message = apiResponse['message'];
         _error = apiResponse['error'];
-        return ProfileModel.empty(); 
+        return false;
       }
     } catch (e) {
       _message = 'Exception occurred';
       _error = e.toString();
-      return ProfileModel.empty();
+      return false;
     }
   }
 

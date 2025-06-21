@@ -18,6 +18,7 @@ import 'src/views/task/report_task_detail.dart';
 import 'package:cleany_app/src/views/task/add_routine_task_screen.dart';
 import 'package:cleany_app/src/views/task/routine_task_detail.dart';
 import 'package:cleany_app/src/views/history/history_screen.dart';
+import 'package:cleany_app/src/views/user/profile_screen.dart';
 
 import 'package:cleany_app/src/providers/auth_provider.dart';
 import 'package:cleany_app/src/providers/navbar_provider.dart';
@@ -26,7 +27,7 @@ import 'package:cleany_app/src/providers/task_provider.dart';
 import 'package:cleany_app/src/providers/task_detail_provider.dart';
 import 'package:cleany_app/src/providers/edit_task_provider.dart';
 import 'package:cleany_app/src/providers/user_profile_provider.dart';
-
+import 'package:cleany_app/src/providers/profile_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -53,6 +54,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskDetailProvider()),
         ChangeNotifierProvider(create: (_) => EditTaskProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -73,6 +75,7 @@ class MainApp extends StatelessWidget {
           '/routine-task-detail': (context) => RoutineTaskDetailScreen(),
           '/add-routine-task': (context) => AddRoutineTaskScreen(),
           '/history': (context) => HistoryScreen(),
+          '/profile': (context) => ProfileScreen(),
 
         },
         theme: ThemeData(

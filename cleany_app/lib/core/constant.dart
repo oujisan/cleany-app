@@ -45,6 +45,7 @@ class AppConstants {
 
   // User API Endpoints
   static String apiFetchUsersUrl = "${AppConstants.baseUrl}/api/user";
+  
 
   // Key Secure Storage
   static String keyToken = 'JwtToken';
