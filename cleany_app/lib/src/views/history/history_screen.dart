@@ -400,25 +400,14 @@ class _HistoryScreenState extends State<HistoryScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              isRoutine ? 'Semua rutinitas selesai!' : 'Belum ada laporan',
+              isRoutine ? 'Semua rutinitas selesai!' : 'Belum ada riwayat laporan',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: AppColors.black,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              isRoutine
-                  ? 'Kerja bagus! Anda telah menyelesaikan semua tugas rutin Anda hari ini.'
-                  : 'Mulailah dengan membuat laporan pertama Anda menggunakan tombol di atas.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.black.withOpacity(0.6),
-                height: 1.4,
-              ),
-            ),
+
           ],
         ),
       ),

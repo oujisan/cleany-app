@@ -28,7 +28,7 @@ class _UserProfileViewState extends State<UserProfileView> {
       backgroundColor: AppColors.white,
       appBar: AppBar(
         title: const Text(
-          'User Profile',
+          'Cleaner',
           style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppColors.primary,

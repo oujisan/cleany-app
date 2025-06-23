@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTopSection(HomeProvider homeProvider) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [_buildUserSection(homeProvider), _buildNotificationButton()],
+      children: [_buildUserSection(homeProvider)],
     );
   }
 
