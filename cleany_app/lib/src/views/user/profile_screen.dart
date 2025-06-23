@@ -1,4 +1,5 @@
 import 'package:cleany_app/core/colors.dart';
+import 'package:cleany_app/src/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cleany_app/src/providers/profile_provider.dart';
@@ -36,22 +37,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildBottomSpacing(),
         ],
       ),
+      bottomNavigationBar: const NavbarWidget(
+      ), 
     );
   }
 
   Widget _buildAppBar() {
     return SliverAppBar(
       expandedHeight: 240,
-      floating: false,
-      pinned: true,
+      automaticallyImplyLeading: false,
       backgroundColor: AppColors.primary,
       elevation: 0,
       shadowColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
+      
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -299,7 +298,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildDivider(),
             _buildInfoItem(icon: Icons.email_outlined, label: 'Email', value: profileProvider.profile.email),
             _buildDivider(),
-            _buildInfoItem(icon: Icons.work_outline, label: 'Role', value: profileProvider.profile.role),
             if (profileProvider.profile.shift != null) ...[
               _buildDivider(),
               _buildInfoItem(icon: Icons.schedule_outlined, label: 'Shift', value: profileProvider.profile.shift!),
@@ -348,10 +346,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           if (isPassword)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, color: AppColors.grey, size: 20),
-              onPressed: _showChangePasswordDialog,
-            ),
+            
+              const SizedBox(),
+            
         ],
       ),
     );
@@ -369,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Edit Profile',
           subtitle: 'Update your personal information',
           color: AppColors.secondary,
-          onTap: () => Navigator.pushNamed(context, '/edit-profile'),
+          onTap: () => _showEditPersonalInfoDialog(context)
         ),
         const SizedBox(height: 16),
         _buildActionButton(
@@ -377,24 +374,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Change Password',
           subtitle: 'Update your account password',
           color: AppColors.primary,
-          onTap: _showChangePasswordDialog,
+          onTap: () => _showChangePasswordDialog(context),
         ),
         const SizedBox(height: 16),
-        _buildActionButton(
-          icon: Icons.refresh_outlined,
-          title: 'Refresh Profile',
-          subtitle: 'Reload your profile information',
-          color: AppColors.primary.withOpacity(0.7),
-          onTap: () async {
-            final profileProvider = context.read<ProfileProvider>();
-            await profileProvider.refreshProfile();
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: const Text('Profile refreshed successfully'), backgroundColor: AppColors.success),
-              );
-            }
-          },
-        ),
+        
         const SizedBox(height: 16),
         _buildActionButton(
           icon: Icons.logout_outlined,
@@ -449,33 +432,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showChangePasswordDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Change Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
-          content: const Text('This feature will redirect you to change password page.', style: TextStyle(fontSize: 14, color: AppColors.grey)),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppColors.grey))),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/change-password');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('Continue'),
+  void _showChangePasswordDialog(BuildContext context) {
+  // Simpan context valid dari luar
+  final currentContext = context;
+
+  showDialog(
+    context: currentContext,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Change Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
+        content: const Text('This feature will redirect you to change password page.', style: TextStyle(fontSize: 14, color: AppColors.grey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(), // close only
+            child: const Text('Cancel', style: TextStyle(color: AppColors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // close first dialog
+              // Tunda pemanggilan sampai frame selesai
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showFormChangePasswordDialog(currentContext); // panggil dengan context valid
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-          ],
-        );
-      },
-    );
-  }
+            child: const Text('Continue'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _showLogoutDialog() {
     showDialog(
@@ -483,15 +476,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-title: const Text('Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
-content: const Text(
-  'Are you sure you want to logout from your account?',
-  style: TextStyle(
-    fontSize: 14,
-    color: AppColors.grey,
-  ),
-),
-actions: [
+              title: const Text('Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black)),
+              content: const Text(
+                'Are you sure you want to logout from your account?',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.grey,
+                ),
+              ),
+        actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(
@@ -508,6 +501,7 @@ actions: [
                 // Clear profile data before logout
                 profileProvider.clearData();
                 await authProvider.logout();
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
@@ -532,4 +526,161 @@ actions: [
     );
   }
 }
+
+void _showEditPersonalInfoDialog(BuildContext context) {
+  final _formKey = GlobalKey<FormState>();
+  String firstName = context.read<ProfileProvider>().profile.firstName;
+  String? lastName = context.read<ProfileProvider>().profile.lastName;
+  String username = context.read<ProfileProvider>().profile.username;
+  String email = context.read<ProfileProvider>().profile.email;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Edit Profile"),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: firstName,
+                decoration: const InputDecoration(labelText: 'First Name'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Cannot be empty' : null,
+                onChanged: (value) => firstName = value,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: lastName,
+                decoration: const InputDecoration(labelText: 'Last Name'),
+                onChanged: (value) => lastName = value,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: username,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Cannot be empty'
+                    : null,
+                decoration: const InputDecoration(labelText: 'Username'),
+                onChanged: (value) => username = value,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: email,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Cannot be empty'
+                    : !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)
+                        ? 'Invalid email format'
+                        : null,
+                decoration: const InputDecoration(labelText: 'Email'),
+                onChanged: (value) => email = value,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                final profile = context.read<ProfileProvider>().profile;
+                context.read<ProfileProvider>().updateUserProfile({
+                  'firstName': firstName,
+                  'lastName': lastName,
+                  'username': username,
+                  'email': email,
+                  'role': profile.role,
+                  'shift': profile.shift,
+                  'imageUrl': profile.imageUrl, 
+                });         
+                Navigator.pop(context);
+              }
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+void _showFormChangePasswordDialog(BuildContext context) {
+  final _formKey = GlobalKey<FormState>();
+  String newPassword = '';
+  String confirmPassword = '';
+
+  // Ambil provider SEBELUM showDialog
+  final profileProvider = context.read<ProfileProvider>();
+  final profile = profileProvider.profile;
+
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Change Password'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'New Password'),
+              onChanged: (value) => newPassword = value,
+              validator: (value) {
+                if (value == null || value.length < 8) {
+                  return 'Password must be at least 8 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Confirm Password'),
+              onChanged: (value) => confirmPassword = value,
+              validator: (value) {
+                if (value != newPassword) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              profileProvider.updateUserProfile({
+                'firstName': profile.firstName,
+                'lastName': profile.lastName,
+                'username': profile.username,
+                'email': profile.email,
+                'role': profile.role,
+                'shift': profile.shift,
+                'imageUrl': profile.imageUrl,
+                'password': newPassword,
+              });
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('Change'),
+        ),
+      ],
+    ),
+  );
+}
+
 

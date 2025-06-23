@@ -22,7 +22,7 @@ class ProfileModel {
   Map<String, dynamic> toJson() => {
     'firstName': firstName,
     'lastName': lastName,
-    'userName': username,
+    'username': username,
     'email': email,
     'password': password,
     'imageUrl': imageUrl,

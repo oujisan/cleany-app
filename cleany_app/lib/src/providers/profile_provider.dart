@@ -42,7 +42,6 @@ class ProfileProvider extends ChangeNotifier {
 
   final ProfileService _profileService = ProfileService();
 
-  /// Load user ID from secure storage
   Future<void> loadUserId() async {
     try {
       _userId = await SecureStorage.read(AppConstants.keyId) ?? '';
@@ -52,7 +51,6 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Fetch user profile
   Future<void> fetchUserProfile([String? specificUserId]) async {
     final targetUserId = specificUserId ?? _userId;
     
@@ -88,7 +86,6 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Update user profile
   Future<bool> updateUserProfile(Map<String, dynamic> data, [String? specificUserId]) async {
     final targetUserId = specificUserId ?? _userId;
     
@@ -110,7 +107,6 @@ class ProfileProvider extends ChangeNotifier {
         _updateMessage = "Profile updated successfully";
         _updateError = null;
         
-        // Refresh profile data after successful update
         await fetchUserProfile(targetUserId);
       } else {
         _updateError = _profileService.getError.isEmpty 
@@ -132,49 +128,7 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Delete user profile
-  Future<bool> deleteUserProfile([String? specificUserId]) async {
-    final targetUserId = specificUserId ?? _userId;
-    
-    if (targetUserId.isEmpty) {
-      _deleteError = "User ID is empty";
-      notifyListeners();
-      return false;
-    }
 
-    _isDeletingProfile = true;
-    _deleteError = null;
-    _deleteMessage = null;
-    notifyListeners();
-
-    try {
-      final success = await _profileService.deleteUserProfile(targetUserId);
-      
-      if (success) {
-        _deleteMessage = "Profile deleted successfully";
-        _deleteError = null;
-        
-        // Clear profile data after successful deletion
-        _profile = ProfileModel.empty();
-      } else {
-        _deleteError = _profileService.getError.isEmpty 
-            ? _profileService.getMessage 
-            : _profileService.getError;
-        _deleteMessage = null;
-      }
-      
-      _isDeletingProfile = false;
-      notifyListeners();
-      return success;
-    } catch (e) {
-      _deleteError = e.toString();
-      _deleteMessage = null;
-      _isDeletingProfile = false;
-      notifyListeners();
-      debugPrint('Error deleting user profile: $e');
-      return false;
-    }
-  }
 
   /// Initialize profile data
   Future<void> initializeProfile() async {
@@ -218,97 +172,6 @@ class ProfileProvider extends ChangeNotifier {
     _deleteMessage = null;
     notifyListeners();
   }
-
-  /// Update specific profile field locally (before API call)
-  void updateProfileField(String field, dynamic value) {
-    // Since ProfileModel doesn't have copyWith method, 
-    // we need to create a new instance with updated values
-    switch (field.toLowerCase()) {
-      case 'firstname':
-        _profile = ProfileModel(
-          firstName: value as String,
-          lastName: _profile.lastName,
-          username: _profile.username,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: _profile.role,
-          shift: _profile.shift,
-        );
-        break;
-      case 'lastname':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: value as String?,
-          username: _profile.username,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: _profile.role,
-          shift: _profile.shift,
-        );
-        break;
-      case 'username':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: _profile.lastName,
-          username: value as String,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: _profile.role,
-          shift: _profile.shift,
-        );
-        break;
-      case 'email':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: _profile.lastName,
-          username: _profile.username,
-          email: value as String,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: _profile.role,
-          shift: _profile.shift,
-        );
-        break;
-      case 'imageurl':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: _profile.lastName,
-          username: _profile.username,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: value as String?,
-          role: _profile.role,
-          shift: _profile.shift,
-        );
-        break;
-      case 'role':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: _profile.lastName,
-          username: _profile.username,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: value as String,
-          shift: _profile.shift,
-        );
-        break;
-      case 'shift':
-        _profile = ProfileModel(
-          firstName: _profile.firstName,
-          lastName: _profile.lastName,
-          username: _profile.username,
-          email: _profile.email,
-          password: _profile.password,
-          imageUrl: _profile.imageUrl,
-          role: _profile.role,
-          shift: value as String?,
-        );
-        break;
-    }
-    notifyListeners();
-  }
+ 
+  
 }

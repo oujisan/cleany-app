@@ -48,10 +48,14 @@ class ProfileService {
         },
         body: json.encode(data),
       );
+      print("Response Status Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
 
       final apiResponse = json.decode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        
         return true;
       } else {
         _message = apiResponse['message'];
@@ -65,31 +69,6 @@ class ProfileService {
     }
   }
 
-  Future<bool> deleteUserProfile(String userId) async {
-    final url = Uri.parse(AppConstants.apiDeleteUserProfileUrl(userId));
-    try {
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
-        },
-      );
-
-      final apiResponse = json.decode(response.body);
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        _message = apiResponse['message'];
-        _error = apiResponse['error'];
-        return false;
-      }
-    } catch (e) {
-      _message = 'Exception occurred';
-      _error = e.toString();
-      return false;
-    }
-  }
+  
 }
 
