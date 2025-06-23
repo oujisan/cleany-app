@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  // static String baseUrl = dotenv.env['API_LOCAL_URL']!;
-  static String baseUrl = dotenv.env['API_AZURE_URL']!;
+  static String baseUrl = dotenv.env['API_LOCAL_URL']!;
+  // static String baseUrl = dotenv.env['API_AZURE_URL']!;
 
   // Auth API Endpoints
   static String apiLoginUrl = "${AppConstants.baseUrl}/api/auth/login";
@@ -46,6 +46,7 @@ class AppConstants {
 
   // User API Endpoints
   static String apiFetchUsersUrl = "${AppConstants.baseUrl}/api/user";
+  
 
   // Key Secure Storage
   static String keyToken = 'JwtToken';
