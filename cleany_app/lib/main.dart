@@ -39,6 +39,7 @@ void main() async {
       enabled: false,
       // enabled: !kReleaseMode,
       builder: (context) => const MainApp(),
+      defaultDevice: Devices.android.samsungGalaxyS25,
     ),
   );
 }
