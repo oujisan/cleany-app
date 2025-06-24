@@ -38,8 +38,8 @@ void main() async {
 
   runApp(
     DevicePreview(
-      // enabled: false,
-      enabled: !kReleaseMode,
+      enabled: true,
+      // enabled: !kReleaseMode,
       builder: (context) => const MainApp(),
       defaultDevice: Devices.android.samsungGalaxyS25,
     ),

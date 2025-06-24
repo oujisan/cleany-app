@@ -298,10 +298,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildDivider(),
             _buildInfoItem(icon: Icons.email_outlined, label: 'Email', value: profileProvider.profile.email),
             _buildDivider(),
-            if (profileProvider.profile.shift != null) ...[
-              _buildDivider(),
-              _buildInfoItem(icon: Icons.schedule_outlined, label: 'Shift', value: profileProvider.profile.shift!),
-            ],
+            if (profileProvider.profile.role.toLowerCase().trim() == 'cleaner') ...[
+            _buildDivider(),
+            _buildInfoItem(
+              icon: Icons.schedule_outlined,
+              label: 'Shift',
+              value: profileProvider.profile.shift?.isNotEmpty == true 
+                  ? profileProvider.profile.shift! 
+                  : 'Belum diatur',
+            ),
+],
+
             _buildDivider(),
             _buildInfoItem(icon: Icons.lock_outline, label: 'Password', value: '••••••••', isPassword: true),
           ],

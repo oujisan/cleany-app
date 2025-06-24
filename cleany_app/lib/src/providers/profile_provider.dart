@@ -52,39 +52,49 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   Future<void> fetchUserProfile([String? specificUserId]) async {
-    final targetUserId = specificUserId ?? _userId;
-    
-    if (targetUserId.isEmpty) {
-      _profileError = "User ID is empty";
-      notifyListeners();
-      return;
-    }
-
-    _isLoadingProfile = true;
-    _profileError = null;
+  final targetUserId = specificUserId ?? _userId;
+  
+  if (targetUserId.isEmpty) {
+    _profileError = "User ID is empty";
     notifyListeners();
+    return;
+  }
 
-    try {
-      final profile = await _profileService.fetchUserProfile(targetUserId);
-      
-      if (profile.username.isNotEmpty) {
-        _profile = profile;
-        _profileError = null;
-      } else {
-        _profileError = _profileService.getError.isEmpty 
-            ? _profileService.getMessage 
-            : _profileService.getError;
-        _profile = ProfileModel.empty();
-      }
-    } catch (e) {
-      _profileError = e.toString();
+  _isLoadingProfile = true;
+  _profileError = null;
+  notifyListeners();
+
+  try {
+    final profile = await _profileService.fetchUserProfile(targetUserId);
+
+    if (profile.username.isNotEmpty) {
+      _profile = profile;
+      _profileError = null;
+    } else {
+      _profileError = _profileService.getError.isEmpty
+          ? _profileService.getMessage
+          : _profileService.getError;
+      _profile = ProfileModel.empty();
+    }
+  } catch (e) {
+    final errorMessage = e.toString();
+
+    // Tangani khusus error shift_name null
+    if (errorMessage.contains("shift_name")) {
+      debugPrint("shift_name is null - continue rendering profile.");
+      _profile = ProfileModel.empty(); // atau tetap gunakan _profile jika ada default
+      _profileError = null; // tidak perlu tunjukkan error di UI
+    } else {
+      _profileError = errorMessage;
       _profile = ProfileModel.empty();
       debugPrint('Error fetching user profile: $e');
     }
-
-    _isLoadingProfile = false;
-    notifyListeners();
   }
+
+  _isLoadingProfile = false;
+  notifyListeners();
+}
+
 
   Future<bool> updateUserProfile(Map<String, dynamic> data, [String? specificUserId]) async {
     final targetUserId = specificUserId ?? _userId;
