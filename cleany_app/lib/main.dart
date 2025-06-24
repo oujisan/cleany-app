@@ -30,6 +30,7 @@ import 'package:cleany_app/src/providers/task_detail_provider.dart';
 import 'package:cleany_app/src/providers/edit_task_provider.dart';
 import 'package:cleany_app/src/providers/user_profile_provider.dart';
 import 'package:cleany_app/src/providers/profile_provider.dart';
+import 'package:cleany_app/src/views/placeholder.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', null);
@@ -37,10 +38,10 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: false,
-      // enabled: !kReleaseMode,
+      // enabled: false,
+      enabled: !kReleaseMode,
       builder: (context) => const MainApp(),
-      defaultDevice: Devices.android.samsungGalaxyS20,
+      defaultDevice: Devices.android.samsungGalaxyS25,
     ),
   );
 }
@@ -81,6 +82,7 @@ class MainApp extends StatelessWidget {
           '/add-routine-task': (context) => AddRoutineTaskScreen(),
           '/history': (context) => HistoryScreen(),
           '/profile': (context) => ProfileScreen(),
+          '/placeholder' : (context) => PlaceholderScreen(),
 
         },
         theme: ThemeData(

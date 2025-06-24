@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  static String baseUrl = dotenv.env['API_LOCAL_URL']!;
-  // static String baseUrl = dotenv.env['API_AZURE_URL']!;
+  // static String baseUrl = dotenv.env['API_LOCAL_URL']!;
+  static String baseUrl = dotenv.env['API_AZURE_URL']!;
 
   // Auth API Endpoints
   static String apiLoginUrl = "${AppConstants.baseUrl}/api/auth/login";
@@ -34,6 +34,9 @@ class AppConstants {
   static String apiFetchUserProfileUrl(String userId) => "${AppConstants.baseUrl}/api/userProfile/$userId";
   static String updateUserProfileUrl(String userId) => "${AppConstants.baseUrl}/api/userProfile/update/$userId";
   static String apiDeleteUserProfileUrl(String userId) => "${AppConstants.baseUrl}/api/userProfile/softdelete/$userId";
+
+  static String apiFetchUserUrl = "${AppConstants.baseUrl}/api/user";
+  static String apiFetchUserByIdUrl(String userId) => "${AppConstants.baseUrl}/api/user/$userId";
 
   // Verification API Endpoints
   static String apiFetchVerificationUrl(String taskId) => "${AppConstants.baseUrl}/api/verification/task/$taskId";

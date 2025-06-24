@@ -38,7 +38,7 @@ class ProfileModel {
     password: json['password'] ?? '',
     imageUrl: json['imageUrl'],
     role: json['role'] ?? '',
-    shift: json['shift'],
+    shift: json['shift'] ?? '',
   );
 
 

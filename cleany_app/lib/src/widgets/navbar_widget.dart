@@ -35,6 +35,9 @@ class NavbarWidget extends StatelessWidget {
           case 3:
             Navigator.pushReplacementNamed(context, '/profile');
             break;
+          case 4:
+            Navigator.pushReplacementNamed(context, '/placeholder');
+            break;
         }
       },
       items: const [
@@ -45,6 +48,7 @@ class NavbarWidget extends StatelessWidget {
         ),
         BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        BottomNavigationBarItem(icon: Icon(Icons.breakfast_dining), label: 'Test'),
       ],
     );
   }

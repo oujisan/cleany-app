@@ -30,6 +30,7 @@ class ApiResponse {
 
 // UserProfile Model
 class UserProfile {
+    final String id;
     final String firstName;
     final String lastName;
     final String username;
@@ -40,6 +41,7 @@ class UserProfile {
     final String? shift;
 
     UserProfile({
+        required this.id,
         required this.firstName,
         required this.lastName,
         required this.username,
@@ -51,6 +53,7 @@ class UserProfile {
     });
 
     factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
+        id: json["userId"].toString(),
         firstName: json["firstName"],
         lastName: json["lastName"],
         username: json["username"],

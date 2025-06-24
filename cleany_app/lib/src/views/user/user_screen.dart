@@ -4,6 +4,7 @@ import 'package:cleany_app/src/models/user_profile_model.dart';
 import 'package:cleany_app/src/providers/user_profile_provider.dart';
 import 'package:cleany_app/core/colors.dart';
 import 'package:provider/provider.dart';
+import 'package:cleany_app/src/views/cleaner_detail.dart';
 
 class UserProfileView extends StatefulWidget {
   const UserProfileView({super.key});
@@ -110,44 +111,61 @@ class _UserProfileViewState extends State<UserProfileView> {
   Widget _buildUserProfileCard(BuildContext context, UserProfile user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-      child: Card(
-        elevation: 8,
-        shadowColor: AppColors.primary.withOpacity(0.2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        color: AppColors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildAvatar(user),
-              const SizedBox(height: 16),
-              Text(
-                user.fullName,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.black,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () {
+          
+          Navigator.push(context, MaterialPageRoute(
+            builder: (context) => CleanerDetail(
+              firstName: user.firstName,
+              lastName: user.lastName,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+              shift: user.shift ?? ''
+            )));
+        },
+        child: Card(
+          elevation: 8,
+          shadowColor: AppColors.primary.withOpacity(0.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          color: AppColors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildAvatar(user),
+                const SizedBox(height: 16),
+                Text(
+                  user.fullName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.black,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '@${user.username}',
-                style: const TextStyle(fontSize: 16, color: AppColors.grey),
-              ),
-              const SizedBox(height: 24),
-              const Divider(color: AppColors.grey),
-              const SizedBox(height: 16),
-              _buildInfoRow(Icons.email_outlined, user.email),
-              _buildInfoRow(
-                Icons.work_outline,
-                'Role: ${user.role == 'k' ? 'Koordinator' : user.role}',
-              ),
-              _buildInfoRow(
-                Icons.schedule_outlined,
-                'Shift: ${user.shift ?? 'Not Assigned'}',
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  '@${user.username}',
+                  style: const TextStyle(fontSize: 16, color: AppColors.grey),
+                ),
+                const SizedBox(height: 24),
+                const Divider(color: AppColors.grey),
+                const SizedBox(height: 16),
+                _buildInfoRow(Icons.email_outlined, user.email),
+                _buildInfoRow(
+                  Icons.work_outline,
+                  'Role: ${user.role == 'k' ? 'Koordinator' : user.role}',
+                ),
+                _buildInfoRow(
+                  Icons.schedule_outlined,
+                  'Shift: ${user.shift ?? 'Not Assigned'}',
+                ),
+              ],
+            ),
           ),
         ),
       ),

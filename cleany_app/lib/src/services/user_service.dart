@@ -7,14 +7,13 @@ class UserService {
   Future<List<UserProfile>> fetchUserProfile() async {
     try {
       final response = await http.get(
-        Uri.parse(AppConstants.apiFetchProfileUserUrl),
+        Uri.parse(AppConstants.apiFetchUserUrl),
         headers: {
           'Content-Type': 'application/json',
           'authorization':
               'Bearer ${await SecureStorage.read(AppConstants.keyToken)}',
         },
       );
-
       if (response.statusCode == 200) {
         final apiResponse = apiResponseFromJson(response.body);
         if (apiResponse.success && apiResponse.data != null) {
@@ -24,7 +23,9 @@ class UserService {
         }
       } else {
         // Handle server errors (e.g., 500, 404)
-        throw Exception('Failed to load user profile. Status code: ${response.statusCode}');
+        throw Exception(
+          'Failed to load user profile. Status code: ${response.statusCode}',
+        );
       }
     } catch (e) {
       // Handle network errors or other exceptions
