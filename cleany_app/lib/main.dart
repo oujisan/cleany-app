@@ -37,7 +37,7 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: false,
+      enabled: true,
       // enabled: !kReleaseMode,
       builder: (context) => const MainApp(),
       defaultDevice: Devices.android.samsungGalaxyS20,
